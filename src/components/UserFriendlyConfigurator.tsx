@@ -6,7 +6,7 @@ import type {
   VenueRoute,
 } from '../types';
 import { REGIONS } from '../data/regions';
-import { Check, MapPin, Sparkles, ShieldCheck, DollarSign, Plane, Building2, Home, Navigation } from 'lucide-react';
+import { Check, MapPin, Sparkles, ShieldCheck, DollarSign, Building2, Home, Navigation } from 'lucide-react';
 
 interface UserFriendlyConfiguratorProps {
   input: CaseInputState;
@@ -599,9 +599,9 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
 
   const isSameCity = clientRegion.id === opponentRegion.id;
 
-  // 严格依据纠纷类型，决定是否展示“合同约定律师费承担”以及“薪资输入”
+  // 严格依据纠纷类型，决定是否展示合同律师费转嫁条款（仅合同债务类）以及仅交通事故案的误工费基准
   const supportsContractFeeClause = ['debt', 'contract', 'real_estate', 'company', 'other'].includes(input.category);
-  const supportsWageInput = ['labor', 'tort', 'debt'].includes(input.category);
+  const isTortInjuryCase = input.category === 'tort';
 
   // 切换起诉地路线的处理函数
   const handleSelectRoute = (route: VenueRoute) => {
@@ -892,8 +892,8 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 4：让用户判断【已知客观事实线索】 */}
-      <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
+      {/* 问题 4：案件与对方具体事实（整合财产线索 + 特殊约定事实，无需多填无用信息） */}
+      <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
@@ -901,97 +901,177 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             </span>
             <div>
               <h3 className="font-bold text-sm sm:text-base text-slate-900">
-                关于对方的财产与现状，你掌握哪些具体事实？
+                关于本案与对方，你掌握哪些具体事实？
               </h3>
-              <p className="text-[11px] text-slate-500">只需勾选已知事实，系统会自动为您评估打赢后能否顺利拿到钱</p>
+              <p className="text-[11px] text-slate-500">只需勾选已知事实与约定，系统自动为您评估回款概率与特殊维权权益</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-          {/* 事实 1 */}
-          <button
-            type="button"
-            onClick={() => onChange({ solvencyLevel: 'high' })}
-            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
-              input.solvencyLevel === 'high'
-                ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20 text-emerald-950 font-semibold shadow-xs'
-                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-            }`}
-          >
-            {input.solvencyLevel === 'high' && (
-              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                <Check className="w-2.5 h-2.5 stroke-[3]" />
-              </span>
-            )}
-            <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
-              {currentFactOptions.high.fact}
-            </div>
-            <div className="mt-1">
-              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-emerald-100 text-emerald-800">
-                {currentFactOptions.high.tag} (回款率 ~90%)
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
-              {currentFactOptions.high.detail}
-            </p>
-          </button>
+        {/* 4.1 对方财产与现状客观事实 */}
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-slate-800">4.1 对方的实际经济状况与名下财产线索：</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-0.5">
+            {/* 事实 1 */}
+            <button
+              type="button"
+              onClick={() => onChange({ solvencyLevel: 'high' })}
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+                input.solvencyLevel === 'high'
+                  ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20 text-emerald-950 font-semibold shadow-xs'
+                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+              }`}
+            >
+              {input.solvencyLevel === 'high' && (
+                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                </span>
+              )}
+              <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+                {currentFactOptions.high.fact}
+              </div>
+              <div className="mt-1">
+                <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-emerald-100 text-emerald-800">
+                  {currentFactOptions.high.tag} (回款率 ~90%)
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                {currentFactOptions.high.detail}
+              </p>
+            </button>
 
-          {/* 事实 2 */}
-          <button
-            type="button"
-            onClick={() => onChange({ solvencyLevel: 'medium' })}
-            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
-              input.solvencyLevel === 'medium'
-                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
-                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-            }`}
-          >
-            {input.solvencyLevel === 'medium' && (
-              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                <Check className="w-2.5 h-2.5 stroke-[3]" />
-              </span>
-            )}
-            <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
-              {currentFactOptions.medium.fact}
-            </div>
-            <div className="mt-1">
-              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-blue-100 text-blue-800">
-                {currentFactOptions.medium.tag} (回款率 ~60%)
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
-              {currentFactOptions.medium.detail}
-            </p>
-          </button>
+            {/* 事实 2 */}
+            <button
+              type="button"
+              onClick={() => onChange({ solvencyLevel: 'medium' })}
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+                input.solvencyLevel === 'medium'
+                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
+                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+              }`}
+            >
+              {input.solvencyLevel === 'medium' && (
+                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                </span>
+              )}
+              <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+                {currentFactOptions.medium.fact}
+              </div>
+              <div className="mt-1">
+                <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-blue-100 text-blue-800">
+                  {currentFactOptions.medium.tag} (回款率 ~60%)
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                {currentFactOptions.medium.detail}
+              </p>
+            </button>
 
-          {/* 事实 3 */}
-          <button
-            type="button"
-            onClick={() => onChange({ solvencyLevel: 'low' })}
-            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
-              input.solvencyLevel === 'low'
-                ? 'border-rose-600 bg-rose-50/70 ring-2 ring-rose-500/20 text-rose-950 font-semibold shadow-xs'
-                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-            }`}
-          >
-            {input.solvencyLevel === 'low' && (
-              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center">
-                <Check className="w-2.5 h-2.5 stroke-[3]" />
-              </span>
-            )}
-            <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
-              {currentFactOptions.low.fact}
+            {/* 事实 3 */}
+            <button
+              type="button"
+              onClick={() => onChange({ solvencyLevel: 'low' })}
+              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+                input.solvencyLevel === 'low'
+                  ? 'border-rose-600 bg-rose-50/70 ring-2 ring-rose-500/20 text-rose-950 font-semibold shadow-xs'
+                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+              }`}
+            >
+              {input.solvencyLevel === 'low' && (
+                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                </span>
+              )}
+              <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+                {currentFactOptions.low.fact}
+              </div>
+              <div className="mt-1">
+                <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-rose-100 text-rose-800">
+                  {currentFactOptions.low.tag}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                {currentFactOptions.low.detail}
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* 4.2 本案专属法律事实与特殊约定（自适应嵌入，无多余填表） */}
+        <div className="pt-3 border-t border-slate-100 space-y-2.5">
+          <label className="text-xs font-bold text-slate-800">4.2 本案合同约定与特殊维权事实：</label>
+
+          {/* A. 合同类纠纷专属：违约方承担律师费约定 */}
+          {supportsContractFeeClause && (
+            <label className="flex items-start space-x-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer hover:bg-slate-100/70 transition-colors">
+              <input
+                type="checkbox"
+                checked={input.hasContractFeeClause}
+                onChange={(e) => onChange({ hasContractFeeClause: e.target.checked })}
+                className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
+              />
+              <div className="text-xs">
+                <span className="font-bold text-slate-900">
+                  借条、合同或协议里写过「违约方承担守约方维权律师费」吗？
+                </span>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  若有白纸黑字约定，法院判决胜诉后通常直接判令被告全额报销您的律师费（最终净支出 ¥0 元）！
+                </p>
+              </div>
+            </label>
+          )}
+
+          {/* B. 知识产权专属：法定全额报销律师费提示 */}
+          {input.category === 'ip' && (
+            <div className="p-3.5 bg-emerald-50/80 rounded-xl border border-emerald-200 text-xs flex items-start space-x-2.5 text-emerald-900">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold">✨ 法定全包保障：</span>
+                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                  依据《著作权法》《商标法》及最高法司法解释，知识产权侵权案件中，权利人为制止侵权行为所支付的合理开支（包括律师费、公证费），<strong>依法全部由败诉侵权方全额赔偿承担</strong>！
+                </p>
+              </div>
             </div>
-            <div className="mt-1">
-              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-rose-100 text-rose-800">
-                {currentFactOptions.low.tag}
-              </span>
+          )}
+
+          {/* C. 婚姻家事专属：调解减免诉讼费提示 */}
+          {input.category === 'marriage' && (
+            <div className="p-3.5 bg-purple-50/80 rounded-xl border border-purple-200 text-xs flex items-start space-x-2.5 text-purple-900">
+              <Sparkles className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold">💡 家事审判调解减免规则：</span>
+                <p className="text-[11px] text-purple-800 leading-relaxed">
+                  婚姻与遗产纠纷中，法院在开庭前依法必须先行组织调解。若双方在法官主持下达成调解协议结案，<strong>法院减半收取案件受理费</strong>，且调解书具有与判决书同等的强制执行效力。
+                </p>
+              </div>
             </div>
-            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
-              {currentFactOptions.low.detail}
-            </p>
-          </button>
+          )}
+
+          {/* D. 仅人身损害/车祸索赔专属：发生意外前的月收入（用于精准核算误工费索赔额） */}
+          {isTortInjuryCase && (
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3">
+              <div className="text-xs space-y-0.5">
+                <span className="font-bold text-slate-900 flex items-center space-x-1">
+                  <DollarSign className="w-3.5 h-3.5 text-blue-600" />
+                  <span>发生事故受伤前的正常月收入 (元)</span>
+                </span>
+                <p className="text-[11px] text-slate-500">
+                  直接作为依法向肇事方及保险公司索赔「误工费」的法定精算基准
+                </p>
+              </div>
+              <div className="relative w-28 shrink-0">
+                <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-xs font-bold">¥</span>
+                <input
+                  type="number"
+                  value={input.clientMonthlySalary || ''}
+                  onChange={(e) => onChange({ clientMonthlySalary: Math.max(0, Number(e.target.value)) })}
+                  placeholder="10000"
+                  className="w-full pl-6 pr-2 py-1.5 text-xs font-bold bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -1261,101 +1341,6 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
               </div>
             )}
           </div>
-        </div>
-      </section>
-
-      {/* 问题 6：按纠纷类型智能匹配的特殊维权权益与索赔参数 */}
-      <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
-        <div className="flex items-center space-x-2">
-          <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
-            6
-          </span>
-          <h3 className="font-bold text-sm sm:text-base text-slate-900">
-            【{currentCategory.title}】专属维权小贴士与参数
-          </h3>
-        </div>
-
-        <div className="space-y-3 pt-1">
-          {/* A. 合同类纠纷专属：违约方承担律师费约定开关 */}
-          {supportsContractFeeClause && (
-            <label className="flex items-start space-x-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer hover:bg-slate-100/70 transition-colors">
-              <input
-                type="checkbox"
-                checked={input.hasContractFeeClause}
-                onChange={(e) => onChange({ hasContractFeeClause: e.target.checked })}
-                className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
-              />
-              <div className="text-xs">
-                <span className="font-bold text-slate-900">
-                  借条、合同或协议里写过「违约方承担守约方律师费」吗？
-                </span>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  若有白纸黑字约定，法院判决胜诉后通常直接判令被告全额报销您的律师费（最终净支出 ¥0 元）！
-                </p>
-              </div>
-            </label>
-          )}
-
-          {/* B. 知识产权专属：法定全额报销律师费提示 */}
-          {input.category === 'ip' && (
-            <div className="p-3.5 bg-emerald-50/80 rounded-xl border border-emerald-200 text-xs flex items-start space-x-2.5 text-emerald-900">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              <div className="space-y-0.5">
-                <span className="font-bold">✨ 法定全包保障：</span>
-                <p className="text-[11px] text-emerald-800 leading-relaxed">
-                  依据《著作权法》《商标法》及最高法司法解释，知识产权侵权案件中，权利人为制止侵权行为所支付的合理开支（包括律师费、公证费），<strong>依法全部由败诉侵权方全额赔偿承担</strong>！
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* C. 婚姻家事专属：调解减免诉讼费提示 */}
-          {input.category === 'marriage' && (
-            <div className="p-3.5 bg-purple-50/80 rounded-xl border border-purple-200 text-xs flex items-start space-x-2.5 text-purple-900">
-              <Sparkles className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
-              <div className="space-y-0.5">
-                <span className="font-bold">💡 家事审判调解减免规则：</span>
-                <p className="text-[11px] text-purple-800 leading-relaxed">
-                  婚姻与遗产纠纷中，法院在开庭前依法必须先行组织调解。若双方在法官主持下达成调解协议结案，<strong>法院减半收取案件受理费</strong>，且调解书具有与判决书同等的强制执行效力。
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* D. 劳动纠纷与车祸伤害专属：薪酬/误工月收入输入 */}
-          {supportsWageInput && (
-            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3">
-              <div className="text-xs space-y-0.5">
-                <span className="font-bold text-slate-900 flex items-center space-x-1">
-                  <DollarSign className="w-3.5 h-3.5 text-blue-600" />
-                  <span>
-                    {input.category === 'labor'
-                      ? '你的月薪标准 / 离职前12个月平均工资 (元)'
-                      : input.category === 'tort'
-                      ? '你受伤前的正常月收入 / 误工基准 (元)'
-                      : '你平时的月薪估算 (元)'}
-                  </span>
-                </span>
-                <p className="text-[11px] text-slate-500">
-                  {input.category === 'labor'
-                    ? '作为劳动仲裁计算拖欠工资、未休年假及2N/N+1经济赔偿金的法定基数'
-                    : input.category === 'tort'
-                    ? '直接决定依法向肇事方及保险公司索赔的误工费数额'
-                    : '用于精确换算自己亲自请假跑法院的误工机会成本'}
-                </p>
-              </div>
-              <div className="relative w-28 shrink-0">
-                <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-xs font-bold">¥</span>
-                <input
-                  type="number"
-                  value={input.clientMonthlySalary || ''}
-                  onChange={(e) => onChange({ clientMonthlySalary: Math.max(0, Number(e.target.value)) })}
-                  placeholder="10000"
-                  className="w-full pl-6 pr-2 py-1.5 text-xs font-bold bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          )}
         </div>
       </section>
     </div>
