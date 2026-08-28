@@ -552,6 +552,37 @@ const FACT_MAP: Record<
   },
 };
 
+// 100% 用户视角的诉讼所处阶段（依据有没有去过法院、有没有判决书来客观判断）
+const STAGE_FACT_OPTIONS: {
+  id: LitigationStage;
+  title: string;
+  tag: string;
+  tagColor: string;
+  desc: string;
+}[] = [
+  {
+    id: 'first_instance_summary',
+    title: '还没去过法院 · 准备第一次去法院打官司',
+    tag: '绝大多数人选这个 · 3~6个月',
+    tagColor: 'bg-blue-100 text-blue-800',
+    desc: '从零开始起诉。法院立案后通常优先快速审理（诉讼费减半）；若案情复杂法官会自动转普通审理。',
+  },
+  {
+    id: 'second_instance',
+    title: '手里有一审判决书 · 我或对方不服，准备上诉',
+    tag: '二审终审 · 3个月内',
+    tagColor: 'bg-purple-100 text-purple-800',
+    desc: '一审法院已经下达判决，在法定期限（通常15天）内向上级中级人民法院提起上诉。',
+  },
+  {
+    id: 'execution',
+    title: '官司已经打赢判决生效 · 对方赖账拒不给钱',
+    tag: '申请强制执行 · 6个月内',
+    tagColor: 'bg-emerald-100 text-emerald-800',
+    desc: '已有生效胜诉判决书，对方逾期不付款，直接向法院执行局申请查封冻结对方名下房车与存款。',
+  },
+];
+
 export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> = ({
   input,
   onChange,
@@ -932,50 +963,76 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 5：事情进展到哪一步 & 在哪个省打官司？ */}
-      <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-4">
-        <div className="flex items-center space-x-2">
-          <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
-            5
-          </span>
-          <h3 className="font-bold text-sm sm:text-base text-slate-900">
-            事情目前进展到哪一步？ & 去哪个省打官司？
-          </h3>
+      {/* 问题 5：事情进展到哪个真实阶段？（完全依据是否去过法院或有无判决书，无需判断案情清不清楚） */}
+      <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+              5
+            </span>
+            <div>
+              <h3 className="font-bold text-sm sm:text-base text-slate-900">
+                事情目前进展到哪一步？ & 去哪个省打官司？
+              </h3>
+              <p className="text-[11px] text-slate-500">依据你是否已经去过法院或是否已有判决书来勾选</p>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-              目前处于什么阶段？
-            </label>
-            <select
-              value={input.stage}
-              onChange={(e) => onChange({ stage: e.target.value as LitigationStage })}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="first_instance_summary">刚准备起诉 · 事实清楚快速审（诉讼费减半 · 3个月内）</option>
-              <option value="first_instance_normal">刚准备起诉 · 案情复杂普通审（全额诉讼费 · 6个月内）</option>
-              <option value="second_instance">一审判了我不服 · 准备上诉打二审（3个月内）</option>
-              <option value="execution">官司打赢了对方赖账 · 申请法院强制执行（6个月内）</option>
-            </select>
-          </div>
+        {/* 3 大直观事实阶段卡片 */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+          {STAGE_FACT_OPTIONS.map((st) => {
+            const isSelected = input.stage === st.id;
+            return (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => onChange({ stage: st.id })}
+                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between ${
+                  isSelected
+                    ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                }`}
+              >
+                {isSelected && (
+                  <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                  </span>
+                )}
+                <div>
+                  <div className="font-bold text-xs sm:text-sm pr-4 text-slate-900">
+                    {st.title}
+                  </div>
+                  <div className="mt-1">
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${st.tagColor}`}>
+                      {st.tag}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                  {st.desc}
+                </p>
+              </button>
+            );
+          })}
+        </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-              去哪个省市打官司？（通常是被告所在城市或合同签定地）
-            </label>
-            <select
-              value={input.regionId}
-              onChange={(e) => onChange({ regionId: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              {REGIONS.map((r) => (
-                <option key={r.id} value={r.id}>
-                  📍 {r.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* 管辖省份选择 */}
+        <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <label className="text-xs font-semibold text-slate-700">
+            去哪个省市打官司？（通常是被告所在城市或合同签定地）
+          </label>
+          <select
+            value={input.regionId}
+            onChange={(e) => onChange({ regionId: e.target.value })}
+            className="bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-xs"
+          >
+            {REGIONS.map((r) => (
+              <option key={r.id} value={r.id}>
+                📍 {r.name}
+              </option>
+            ))}
+          </select>
         </div>
       </section>
 
