@@ -5,7 +5,7 @@ import type {
   LitigationStage,
 } from '../types';
 import { REGIONS } from '../data/regions';
-import { Check, MapPin, Sparkles, ShieldCheck, DollarSign } from 'lucide-react';
+import { Check, MapPin, Sparkles, ShieldCheck, DollarSign, Compass, Zap } from 'lucide-react';
 
 interface UserFriendlyConfiguratorProps {
   input: CaseInputState;
@@ -583,29 +583,45 @@ const STAGE_FACT_OPTIONS: {
   },
 ];
 
-// 根据不同纠纷类型，提供针对性的法律管辖地选项
+// 根据不同纠纷类型，提供针对性的法律管辖地选项（含详细的利弊分析、当事人要不要去、查封优势）
 interface JurisdictionOption {
   id: string;
   title: string;
   subLabel: string;
-  isRecommended?: boolean;
-  legalReason: string;
+  advantageTag: string;
+  advantageTagColor: string;
+  shouldIGo: string;        // 当事人要不要亲自去
+  costAndTravel: string;    // 费用与差旅
+  freezeAdvantage: string;  // 查封与执行优势
+  recommendScene: string;   // 适合什么情况选
+  legalReason: string;      // 法律依据
 }
 
 const JURISDICTION_MAP: Record<CaseCategory, JurisdictionOption[]> = {
   debt: [
     {
       id: 'creditor_place',
-      title: '在我所在的城市打（推荐 · 家门口起诉）',
-      subLabel: '你的户籍地 / 常住地 / 银行接收还款地',
-      isRecommended: true,
-      legalReason: '最高法《民间借贷司法解释》规定：接收货币一方（出借人）所在地为合同履行地，可直接在自己家门口法院起诉，省去异地奔波！',
+      title: '在我所在的城市打（家门口起诉 · 推荐）',
+      subLabel: '你的户籍地 / 常住地 / 微信银行接收还款地',
+      advantageTag: '最省心 · 零奔波',
+      advantageTagColor: 'bg-emerald-100 text-emerald-800',
+      shouldIGo: '完全不需要去外地。如需配合核对原件直接在本地办理；委托律师后律师全权代办出庭。',
+      costAndTravel: '零差旅住宿费；律师费适用你所在城市标准。',
+      freezeAdvantage: '本地法院立案极快；若对方在老家有房产，判决生效后由本地法院发起全国网络查控冻结。',
+      recommendScene: '希望最省事、不想出差、有微信转账流水/借条事实确凿的人。',
+      legalReason: '最高法《民间借贷司法解释》规定：接收货币一方（出借人）所在地即合同履行地，可直接在自己家门口法院起诉！',
     },
     {
       id: 'debtor_place',
       title: '在对方（借款人）所在的城市打',
       subLabel: '欠债人的户籍地 / 经常居住地',
-      legalReason: '被告住所地法院管辖。如果对方名下的房产、车辆或主要开户行全在对方老家，在此地起诉查封财产更直接。',
+      advantageTag: '查封快 · 本地执行强',
+      advantageTagColor: 'bg-blue-100 text-blue-800',
+      shouldIGo: '委托当地律师全权代办出庭，你本人依然无需亲自前往外地。',
+      costAndTravel: '直接为您匹配对方当地律师，免除异地差旅费；三四线城市律师费往往更实惠。',
+      freezeAdvantage: '【最大优势】当地法院下楼就能直接查封对方在老家的房产、车辆与本地农商行账户，执行回款速度极快！',
+      recommendScene: '知道对方在老家名下有房子、车子或开店，想以最快速度查封其资产逼其还钱的人。',
+      legalReason: '民诉法通用原则“原告就被告”；若对方主要财产都在其住所地，直接在当地起诉执行效率最高。',
     },
   ],
   labor: [
@@ -613,14 +629,25 @@ const JURISDICTION_MAP: Record<CaseCategory, JurisdictionOption[]> = {
       id: 'work_place',
       title: '在我的实际工作地城市打（推荐）',
       subLabel: '你日常打卡上班的办公地点 / 劳动合同履行地',
-      isRecommended: true,
-      legalReason: '《劳动争议调解仲裁法》规定：劳动争议由劳动合同履行地或者用人单位所在地的劳动争议仲裁委员会管辖，实际工作地最方便。',
+      advantageTag: '就近维权 · 取证方便',
+      advantageTagColor: 'bg-emerald-100 text-emerald-800',
+      shouldIGo: '就在你生活的城市，开庭或调解最方便，委托律师后全程托管。',
+      costAndTravel: '无差旅开支；劳动仲裁阶段法定免收案件受理费。',
+      freezeAdvantage: '当地劳动仲裁委熟悉本地用工政策，对劳动者保护力度大。',
+      recommendScene: '日常在本地正常通勤上班、被拖欠工资或违法裁员的员工。',
+      legalReason: '《劳动争议调解仲裁法》第21条：劳动争议由劳动合同履行地或者用人单位所在地的劳动争议仲裁委员会管辖。',
     },
     {
       id: 'company_place',
       title: '在公司营业执照注册地城市打',
       subLabel: '公司总部 / 营业执照登记住所地',
-      legalReason: '若异地远程办公或工作地经常变动，可直接向公司工商注册地的仲裁委申请劳动仲裁。',
+      advantageTag: '直击总部 · 防空壳转移',
+      advantageTagColor: 'bg-purple-100 text-purple-800',
+      shouldIGo: '委托总部当地律师代办，当事人不用跨省跑腿。',
+      costAndTravel: '匹配总部当地劳动律师，免差旅费。',
+      freezeAdvantage: '可直接查封冻结公司总部基本对公账户，防止异地项目部关门跑路。',
+      recommendScene: '公司属于外派异地办公、分支机构没有独立财产或已被注销搬空的员工。',
+      legalReason: '用人单位所在地劳动仲裁委管辖，适用于异地派遣或总部集权管理模式。',
     },
   ],
   contract: [
@@ -628,29 +655,51 @@ const JURISDICTION_MAP: Record<CaseCategory, JurisdictionOption[]> = {
       id: 'contract_perform_place',
       title: '在我方城市 / 合同约定的送货收款地打（推荐）',
       subLabel: '合同履行地 / 接收货款一方所在地',
-      isRecommended: true,
+      advantageTag: '主场优势 · 本地立案',
+      advantageTagColor: 'bg-emerald-100 text-emerald-800',
+      shouldIGo: '本地办理，委托律师全权出庭，你正常经营无需跑异地。',
+      costAndTravel: '无异地出差开支；适用本地律协参考标准。',
+      freezeAdvantage: '本地立案后可立即申请全国总对总保全冻结对方账户。',
+      recommendScene: '作为供货方/守约方，合同明确约定在本地履行或拖欠货款的情况。',
       legalReason: '买卖合同如对方拖欠货款，守约方接收货币所在地可作为合同履行地管辖；若合同专门约定了管辖法院以约定为准。',
     },
     {
       id: 'defendant_place',
       title: '在对方企业注册地所在城市打',
       subLabel: '被告公司住所地法院',
+      advantageTag: '就地查封仓库与账户',
+      advantageTagColor: 'bg-blue-100 text-blue-800',
+      shouldIGo: '委托当地商事律师代办，你无需前往外地。',
+      costAndTravel: '匹配当地律师代理，避免跨省出庭差旅溢价。',
+      freezeAdvantage: '当地法院法官可直接上门查封对方厂房、仓库现货、机器设备及对公流水。',
+      recommendScene: '对方企业有实体厂房库房，且担心对方转移名下资产的商事纠纷。',
       legalReason: '民事诉讼基本原则“原告就被告”，便于当地法院直接上门送达传票并冻结其对公基本户。',
     },
   ],
   real_estate: [
     {
       id: 'property_place',
-      title: '在出租房屋 / 涉案房产所在城市打（法定首选）',
+      title: '在出租房屋 / 涉案房产所在城市打（法定专属 · 强力推荐）',
       subLabel: '争议房屋 / 房产不动产坐落地',
-      isRecommended: true,
-      legalReason: '《民事诉讼法》规定因不动产纠纷提起的诉讼，由不动产所在地人民法院专属管辖，在该房产辖区法院立案最权威稳妥！',
+      advantageTag: '法定专属管辖 · 权威高效',
+      advantageTagColor: 'bg-emerald-100 text-emerald-800',
+      shouldIGo: '如在本地无需跑腿；委托律师后律师代为前往法院出庭与房管局调档。',
+      costAndTravel: '适用房产当地标准；无额外跨省异地成本。',
+      freezeAdvantage: '当地法院可一键直连本地不动产登记中心，秒级查封涉案房产，无法转移！',
+      recommendScene: '所有租房退押金、二手房买卖违约、房屋装修质量纠纷首选。',
+      legalReason: '《民事诉讼法》第33条明确规定：因不动产纠纷提起的诉讼，由不动产所在地人民法院专属管辖！',
     },
     {
       id: 'landlord_place',
       title: '在房东户籍地 / 中介公司总部城市打',
-      subLabel: '被告住所地（若仅为主张押金债权）',
-      legalReason: '若仅为主张金钱返还且房屋管辖存在争议时，也可在被告住所地法院提起诉讼。',
+      subLabel: '被告住所地（仅限纯押金债权主张）',
+      advantageTag: '追索个人资产',
+      advantageTagColor: 'bg-slate-100 text-slate-800',
+      shouldIGo: '委托律师代办，本人无需前往。',
+      costAndTravel: '匹配当地律师免差旅。',
+      freezeAdvantage: '便于直接查控房东个人在户籍地的其他银行存款。',
+      recommendScene: '房屋在异地但房东在本地生活，仅主张退还几千元押金的情况。',
+      legalReason: '若仅为主张纯金钱返还且房屋管辖存在争议时，也可在被告住所地提起诉讼。',
     },
   ],
   tort: [
@@ -658,14 +707,25 @@ const JURISDICTION_MAP: Record<CaseCategory, JurisdictionOption[]> = {
       id: 'accident_place',
       title: '在车祸 / 侵权事故发生地城市打（推荐）',
       subLabel: '事故发生地交警辖区 / 侵权行为地',
-      isRecommended: true,
-      legalReason: '《民事诉讼法》第28条：因侵权行为提起的诉讼，由侵权行为地（事故地）人民法院管辖，便于调取交警卷宗与现场勘验。',
+      advantageTag: '交警卷宗在当地 · 理赔最快',
+      advantageTagColor: 'bg-emerald-100 text-emerald-800',
+      shouldIGo: '事故发生地通常就是你常住地或出险地，律师代办出庭，你安心养伤。',
+      costAndTravel: '调档与鉴定均在当地完成，无额外差旅费。',
+      freezeAdvantage: '当地交警大队、司法鉴定所及承保保险公司分支机构均在本地，调解理赔通道极其顺畅。',
+      recommendScene: '车祸索赔、人身伤害赔偿的首选方案。',
+      legalReason: '《民事诉讼法》第28条：因侵权行为提起的诉讼，由侵权行为地（事故地）人民法院管辖。',
     },
     {
       id: 'tortfeasor_place',
       title: '在肇事者 / 被告户籍或常住城市打',
       subLabel: '被告住所地法院',
-      legalReason: '可在被告住所地法院起诉，若对方在当地有固定房产，便于判决生效后就地申请强制执行。',
+      advantageTag: '追索无保险个人',
+      advantageTagColor: 'bg-blue-100 text-blue-800',
+      shouldIGo: '委托当地律师代办，本人无需前往外地。',
+      costAndTravel: '匹配当地律师代理，免差旅费。',
+      freezeAdvantage: '若肇事方未买保险且在老家有固定房产，便于执行局直接查封其个人资产。',
+      recommendScene: '肇事车辆无商业险或对方逃逸回老家、需强制执行其个人房车的情况。',
+      legalReason: '可在被告住所地法院起诉，便于判决生效后就地申请强制执行。',
     },
   ],
   marriage: [
@@ -673,13 +733,24 @@ const JURISDICTION_MAP: Record<CaseCategory, JurisdictionOption[]> = {
       id: 'spouse_place',
       title: '在配偶（对方）户籍地或常住城市打（法定原则）',
       subLabel: '被告经常居住地（连续居住满1年）',
-      isRecommended: true,
+      advantageTag: '法定管辖地',
+      advantageTagColor: 'bg-purple-100 text-purple-800',
+      shouldIGo: '离婚案件法官通常要求双方亲自出庭 1 次核实感情；若在异地需在开庭当天前往（律师陪同）。',
+      costAndTravel: '在对方城市聘请律师或本地律师陪同出庭。',
+      freezeAdvantage: '可直接查封对方在当地的银行账户与名下车辆。',
+      recommendScene: '配偶在老家或长期在某城市工作生活的离婚诉讼。',
       legalReason: '对公民提起的民事诉讼由被告住所地管辖；若对方离开原籍连续居住满一年，可在其经常居住地法院起诉。',
     },
     {
       id: 'estate_place',
       title: '在主要房产 / 被继承人遗产所在地打',
       subLabel: '共同房产所在地 / 遗产主要存放地',
+      advantageTag: '房产确权最快',
+      advantageTagColor: 'bg-emerald-100 text-emerald-800',
+      shouldIGo: '律师全权代办遗产继承诉讼与房产档案调取。',
+      costAndTravel: '适用当地标准，无额外差旅。',
+      freezeAdvantage: '不动产所在地法院办理房产过户、继承分割与拍卖执行最直接有效。',
+      recommendScene: '重点争议在于大额共同房产分割或遗产继承案件。',
       legalReason: '遗产继承纠纷由被继承人死亡时住所地或主要遗产所在地法院专属管辖。',
     },
   ],
@@ -688,28 +759,50 @@ const JURISDICTION_MAP: Record<CaseCategory, JurisdictionOption[]> = {
       id: 'ip_infringement_place',
       title: '在侵权发生地 / 对方网店公司所在地打',
       subLabel: '侵权行为实施地 / 侵权网店经营主体所在地',
-      isRecommended: true,
+      advantageTag: '查封冻结平台资金',
+      advantageTagColor: 'bg-blue-100 text-blue-800',
+      shouldIGo: '委托当地知识产权专业律师全权出庭，你无需到场。',
+      costAndTravel: '匹配当地专业知产律师，费用依法由侵权方全额赔偿报销。',
+      freezeAdvantage: '可快速保全冻结对方在电商平台的保证金、提现账户与库存商品。',
+      recommendScene: '对方是有实体公司的侵权大户、电商大卖家的情况。',
       legalReason: '知识产权侵权可在侵权行为实施地、侵权复制品储藏地或被告住所地法院管辖。',
     },
     {
       id: 'ip_plaintiff_place',
-      title: '在我方住所地城市打（网络侵权）',
+      title: '在我方住所地城市打（网络侵权 · 推荐）',
       subLabel: '被侵权人（你）的经常居住地',
+      advantageTag: '家门口打官司 · 省心维权',
+      advantageTagColor: 'bg-emerald-100 text-emerald-800',
+      shouldIGo: '本地办理，零奔波；委托律师一键托管。',
+      costAndTravel: '零差旅；合理律师费由败诉方全额赔偿。',
+      freezeAdvantage: '本地互联网法院或中级法院线上开庭，极其便捷。',
+      recommendScene: '图片、文章、短视频、软件著作权等网络侵权维权首选。',
       legalReason: '信息网络传播权侵权纠纷中，被侵权人发现侵权内容的计算机终端等设备所在地也可作为管辖连接点。',
     },
   ],
   company: [
     {
       id: 'company_reg_place',
-      title: '在公司工商登记注册地所在城市打（法定管辖）',
+      title: '在公司工商登记注册地所在城市打（法定管辖 · 推荐）',
       subLabel: '涉案公司住所地法院',
-      isRecommended: true,
+      advantageTag: '法定专属管辖',
+      advantageTagColor: 'bg-emerald-100 text-emerald-800',
+      shouldIGo: '委托商事律师出庭，股东本人无需到庭。',
+      costAndTravel: '适用公司所在地商事律师费率。',
+      freezeAdvantage: '法院直连当地市场监管局查封股权、调取工商内档及查封对公账户。',
+      recommendScene: '股东知情权、分红纠纷、公司解散、股权确权等商事诉讼。',
       legalReason: '《民事诉讼法》第26条：因公司设立、确认股东资格、分配利润、解散等纠纷，由公司住所地人民法院管辖。',
     },
     {
       id: 'shareholder_place',
       title: '在主要财产所在地 / 股东户籍地打',
       subLabel: '合同履行地或被告股东所在地',
+      advantageTag: '追索个人资产',
+      advantageTagColor: 'bg-blue-100 text-blue-800',
+      shouldIGo: '委托当地律师代办，本人无需前往。',
+      costAndTravel: '匹配当地律师免差旅。',
+      freezeAdvantage: '便于直接查封违约股东名下房车存款。',
+      recommendScene: '股权转让款拖欠、对赌协议个人回购兜底等债务纠纷。',
       legalReason: '股权转让合同纠纷等债权类争议，也可按合同履行地或被告所在地确定管辖。',
     },
   ],
@@ -718,13 +811,24 @@ const JURISDICTION_MAP: Record<CaseCategory, JurisdictionOption[]> = {
       id: 'plaintiff_place',
       title: '在我方所在地 / 合同履行地城市打（推荐）',
       subLabel: '原告住所地或约定履行地',
-      isRecommended: true,
+      advantageTag: '最省心 · 零奔波',
+      advantageTagColor: 'bg-emerald-100 text-emerald-800',
+      shouldIGo: '本地办理，零跨省奔波，委托律师全权出庭。',
+      costAndTravel: '无异地差旅成本。',
+      freezeAdvantage: '本地立案快捷，通过全国执行网络联网查控。',
+      recommendScene: '希望维权成本最低、生活不受打扰的人。',
       legalReason: '依据民诉法相关履行地规定，就近在维权成本较低的辖区法院起诉。',
     },
     {
       id: 'defendant_place',
       title: '在对方住所地 / 公司注册地所在城市打',
       subLabel: '被告住所地法院',
+      advantageTag: '查封快 · 执行强',
+      advantageTagColor: 'bg-blue-100 text-blue-800',
+      shouldIGo: '委托当地律师代办，本人依然无需去外地。',
+      costAndTravel: '匹配当地律师，免除差旅费。',
+      freezeAdvantage: '当地法院下楼直接查封对方本地房车与存款。',
+      recommendScene: '对方在老家有明确房产车辆线索的情况。',
       legalReason: '标准被告住所地管辖，便于直接查控冻结对方名下资产。',
     },
   ],
@@ -782,7 +886,6 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                   onChange({
                     category: newCategory,
                     claimAmount: input.isPropertyCase ? defaultAmount : 0,
-                    // If switching to a category that doesn't support contract fee clause, reset it
                     hasContractFeeClause: ['debt', 'contract', 'real_estate', 'company', 'other'].includes(newCategory)
                       ? input.hasContractFeeClause
                       : false,
@@ -1125,7 +1228,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 5：客观阶段 + 案件定制法定管辖城市 */}
+      {/* 问题 5：客观阶段 + 深度决策指引：去哪个城市打官司有什么区别与影响？ */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-4">
         {/* 5.1 诉讼阶段 */}
         <div className="space-y-3">
@@ -1179,21 +1282,23 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
           </div>
         </div>
 
-        {/* 5.2 案件定制的管辖城市连接点 */}
+        {/* 5.2 案件定制的管辖城市连接点与 3秒决策指南 */}
         <div className="pt-4 border-t border-slate-100 space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <div className="flex items-center space-x-1.5">
               <MapPin className="w-4 h-4 text-blue-600" />
               <h4 className="font-bold text-xs sm:text-sm text-slate-900">
-                你想去哪个城市打官司？（根据【{currentCategory.title}】法律规则，有以下可选城市）
+                你想去哪个城市打官司？（依法有以下两个可选城市）
               </h4>
             </div>
-            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold hidden sm:inline">
-              依法支持多地管辖选择
-            </span>
+            <div className="flex items-center space-x-1 text-[11px] text-blue-600 font-bold">
+              <Compass className="w-3.5 h-3.5" />
+              <span>3秒看懂两个城市有什么区别</span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* 管辖连接点深度决策卡片 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {currentJurisdictionOptions.map((j) => {
               const isSelected = selectedJurisdictionId === j.id;
               return (
@@ -1201,33 +1306,64 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                   key={j.id}
                   type="button"
                   onClick={() => setSelectedJurisdictionId(j.id)}
-                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative ${
+                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col justify-between space-y-3 ${
                     isSelected
-                      ? 'border-blue-600 bg-blue-50/80 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
+                      ? 'border-blue-600 bg-blue-50/90 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
                       : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
                   }`}
                 >
                   {isSelected && (
-                    <span className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                    <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
                       <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </span>
                   )}
-                  <div className="flex items-center space-x-1.5">
-                    <span className="text-xs sm:text-sm font-bold text-slate-900">{j.title}</span>
+
+                  {/* 标题与核心优势标签 */}
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs sm:text-sm font-black text-slate-900 pr-5">{j.title}</span>
+                    </div>
+                    <div className="flex items-center space-x-1.5 mt-1">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md font-black ${j.advantageTagColor}`}>
+                        {j.advantageTag}
+                      </span>
+                      <span className="text-[11px] text-slate-500 truncate">
+                        📍 {j.subLabel}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-[11px] text-blue-700 font-medium mt-0.5">
-                    📍 {j.subLabel}
+
+                  {/* 3 大核心影响对比：要不要去？费用与差旅？查封优势？ */}
+                  <div className="space-y-1.5 text-[11px] bg-white/80 p-2.5 rounded-xl border border-slate-200/80 text-slate-600">
+                    <div className="flex items-start space-x-1">
+                      <span className="font-bold text-slate-800 shrink-0">🏃 要不要我去：</span>
+                      <span>{j.shouldIGo}</span>
+                    </div>
+                    <div className="flex items-start space-x-1">
+                      <span className="font-bold text-slate-800 shrink-0">💰 费用与差旅：</span>
+                      <span>{j.costAndTravel}</span>
+                    </div>
+                    <div className="flex items-start space-x-1">
+                      <span className="font-bold text-blue-800 shrink-0">🎯 查封与执行：</span>
+                      <span className="text-blue-950 font-medium">{j.freezeAdvantage}</span>
+                    </div>
+                  </div>
+
+                  {/* 推荐人群 */}
+                  <div className="text-[10px] text-slate-500 flex items-center space-x-1 pt-0.5">
+                    <Zap className="w-3 h-3 text-amber-500 shrink-0" />
+                    <span><strong>适合：</strong>{j.recommendScene}</span>
                   </div>
                 </button>
               );
             })}
           </div>
 
-          {/* 法律管辖依据 */}
-          <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200/60 text-xs flex items-start space-x-2 text-slate-700">
+          {/* 法律依据说明 */}
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-start space-x-2 text-slate-600">
             <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-[11px] leading-relaxed">
-              <span className="font-bold text-blue-900">管辖依据：</span>
+              <span className="font-bold text-slate-900">法律管辖依据：</span>
               <span>{activeJurisdiction.legalReason}</span>
             </div>
           </div>
@@ -1235,7 +1371,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
           {/* 具体省市选择器 */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
             <label className="text-xs font-semibold text-slate-700">
-              请选择该地点所在的具体省市（适用当地法院审理与律协参考标准）：
+              请选择该地点所属的具体省市（匹配当地法院裁判标准与律协指导价）：
             </label>
             <select
               value={input.regionId}
@@ -1252,7 +1388,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 6：按纠纷类型智能匹配的特殊维权权益与索赔参数（不再胡乱出现） */}
+      {/* 问题 6：按纠纷类型智能匹配的特殊维权权益与索赔参数 */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
         <div className="flex items-center space-x-2">
           <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
@@ -1310,7 +1446,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             </div>
           )}
 
-          {/* D. 劳动纠纷与车祸伤害专属：薪酬/误工月收入输入（作为索赔核心参数） */}
+          {/* D. 劳动纠纷与车祸伤害专属：薪酬/误工月收入输入 */}
           {supportsWageInput && (
             <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3">
               <div className="text-xs space-y-0.5">
