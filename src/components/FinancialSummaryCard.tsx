@@ -5,6 +5,7 @@ import {
   Sparkles,
   Info,
   CheckCircle2,
+  Plane,
 } from 'lucide-react';
 
 interface FinancialSummaryCardProps {
@@ -23,7 +24,7 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({ fina
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900">打官司预计总花费明细</h2>
-            <p className="text-xs text-slate-500">透明列出各项费用开支与承担规则</p>
+            <p className="text-xs text-slate-500">透明列出各项费用开支、异地差旅与承担规则</p>
           </div>
         </div>
 
@@ -35,7 +36,7 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({ fina
         ) : (
           <div className="inline-flex items-center space-x-1.5 bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs">
             <Info className="w-3.5 h-3.5 text-slate-400" />
-            <span>常规纠纷：律师费各自承担</span>
+            <span>常规纠纷：诉讼费对方退还 · 仅律师费</span>
           </div>
         )}
       </div>
@@ -73,6 +74,19 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({ fina
             ? '🎉 本案符合律师费转嫁规则，判决胜诉后法院责令对方全额赔偿您的律师费与诉讼费，您最终实际支出为 0 元！'
             : '打赢官司后，法院收取的案件受理费由输了的被告全额退还给您；您最终真正支出的费用主要为请律师的专业服务费。'}
         </p>
+
+        {/* 异地省差旅费标签 */}
+        {financial.isCrossRegion && (
+          <div className="mt-3.5 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs">
+            <span className="text-amber-300 font-bold flex items-center space-x-1">
+              <Plane className="w-3.5 h-3.5" />
+              <span>异地诉讼差旅费省钱特权：</span>
+            </span>
+            <span className="text-emerald-300 font-black">
+              平台直配起诉地同城律师 · 差旅费 ¥0 (立省约 ¥{financial.travelCostSaved.toLocaleString()})
+            </span>
+          </div>
+        )}
       </div>
 
       {/* 费用明细表格 */}
@@ -81,7 +95,7 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({ fina
           <div className="col-span-4 sm:col-span-3">各项费用名目</div>
           <div className="col-span-4 sm:col-span-3">金额参考</div>
           <div className="col-span-4 sm:col-span-3">承担归属规则</div>
-          <div className="hidden sm:block sm:col-span-3 text-right">法律依据</div>
+          <div className="hidden sm:block sm:col-span-3 text-right">法律与行业依据</div>
         </div>
 
         <div className="divide-y divide-slate-100">
@@ -93,20 +107,44 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({ fina
             <div className="col-span-4 sm:col-span-3 font-bold text-slate-900">
               ¥ {financial.lawyerFeeMin.toLocaleString()} ~ {financial.lawyerFeeMax.toLocaleString()}
               <div className="text-[10px] text-slate-400 font-normal">
-                当地参考均价: ¥{financial.lawyerFeeMedian.toLocaleString()}
+                起诉地参考均价: ¥{financial.lawyerFeeMedian.toLocaleString()}
               </div>
             </div>
             <div className="col-span-4 sm:col-span-3">
               {financial.canTransferLawyerFee ? (
-                <span className="text-emerald-700 font-bold">依法可要求对方报销</span>
+                <span className="text-emerald-700 font-bold">依法可要求对方全额报销</span>
               ) : (
-                <span className="text-slate-600">自己支付给律师</span>
+                <span className="text-slate-600">委托人自行支付</span>
               )}
             </div>
             <div className="hidden sm:block sm:col-span-3 text-right text-slate-400 text-[11px]">
-              省律协指导标准与市场协商
+              起诉地省律协指导标准
             </div>
           </div>
+
+          {/* 异地办案差旅费对比（核心机会点） */}
+          {financial.isCrossRegion && (
+            <div className="px-4 py-3 grid grid-cols-12 items-center bg-emerald-50/50 hover:bg-emerald-50/80 transition-colors border-l-2 border-emerald-500">
+              <div className="col-span-4 sm:col-span-3 font-bold text-emerald-950 flex items-center space-x-1">
+                <Plane className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>异地出庭办案差旅费</span>
+              </div>
+              <div className="col-span-4 sm:col-span-3">
+                <div className="text-emerald-700 font-black text-xs">
+                  ✨ 平台直配: ¥0 元
+                </div>
+                <div className="text-[10px] text-slate-400 line-through">
+                  传统本地律师: ¥{financial.traditionalTravelCostMin.toLocaleString()}~{financial.traditionalTravelCostMax.toLocaleString()}
+                </div>
+              </div>
+              <div className="col-span-4 sm:col-span-3 text-emerald-700 font-bold">
+                平台直配当地律师 · 零差旅
+              </div>
+              <div className="hidden sm:block sm:col-span-3 text-right text-emerald-600 text-[11px] font-bold">
+                立省约 ¥{financial.travelCostSaved.toLocaleString()} 差旅费
+              </div>
+            </div>
+          )}
 
           {/* 法院诉讼费 */}
           <div className="px-4 py-3 grid grid-cols-12 items-center hover:bg-slate-50/60 transition-colors">

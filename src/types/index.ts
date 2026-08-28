@@ -37,13 +37,14 @@ export interface CaseInputState {
   isPropertyCase: boolean;       // 是否涉及财产标的
   claimAmount: number;           // 争议标的金额（元）
   regionId: string;              // 管辖省份/城市ID
+  isOpponentCity: boolean;       // 是否选择在对方/异地城市起诉
   stage: LitigationStage;        // 诉讼程序阶段
   feeMode: FeeMode;              // 偏好计费方式
   evidenceLevel: EvidenceLevel;  // 证据完备度
   solvencyLevel: SolvencyLevel;  // 对方偿债能力与财产线索
   hasContractFeeClause: boolean; // 合同是否明确约定败诉方承担律师费
   clientMonthlySalary: number;   // 当事人月薪（元，用于机会成本折算）
-  customHourlyRate?: number;     // 律师自定义时薪（用于报价模式）
+  customHourlyRate?: number;     // 律师自定义时薪
 }
 
 export interface FeeTier {
@@ -78,6 +79,13 @@ export interface FinancialBreakdown {
   preservationInsuranceFee: number; // 保全责任险费（约0.15%）
   
   executionFee: number;          // 申请执行费（从执行回款中扣除）
+  
+  // 异地差旅费对比（核心商业机会点）
+  isCrossRegion: boolean;        // 是否属于异地/对方城市诉讼
+  traditionalTravelCostMin: number; // 传统请本地律师出差的额外差旅费（高铁飞机酒店补贴）
+  traditionalTravelCostMax: number;
+  platformTravelCost: number;    // 平台直连当地律师的差旅费（恒为0元）
+  travelCostSaved: number;       // 平台匹配立省差旅费
   
   upfrontCostMin: number;        // 前期需垫付总资金下限
   upfrontCostMax: number;        // 前期需垫付总资金上限

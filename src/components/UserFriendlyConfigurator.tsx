@@ -1305,7 +1305,11 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                 <button
                   key={j.id}
                   type="button"
-                  onClick={() => setSelectedJurisdictionId(j.id)}
+                  onClick={() => {
+                    setSelectedJurisdictionId(j.id);
+                    const isOpponent = j.id.includes('debtor') || j.id.includes('company') || j.id.includes('defendant') || j.id.includes('tortfeasor') || j.id.includes('landlord') || j.id.includes('shareholder');
+                    onChange({ isOpponentCity: isOpponent });
+                  }}
                   className={`p-4 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col justify-between space-y-3 ${
                     isSelected
                       ? 'border-blue-600 bg-blue-50/90 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'

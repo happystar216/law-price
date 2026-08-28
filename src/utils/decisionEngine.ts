@@ -26,7 +26,6 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
   let standardCourtFee = 0;
   if (input.isPropertyCase && claimAmount > 0) {
     if (input.stage === 'execution') {
-      // 执行费按民诉法执行收费办法，从执行款中扣除
       standardCourtFee = calculateExecutionFee(claimAmount);
     } else {
       standardCourtFee = calculateCivilCourtFee(claimAmount);
@@ -35,16 +34,14 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     standardCourtFee = getNonPropertyCourtFee(input.category);
   }
 
-  // 简易程序一审诉讼费法定减半；二审全额；执行阶段暂免先交（执行款中扣除）
   const isSummaryDiscount = input.stage === 'first_instance_summary';
   let courtFeeDiscounted = standardCourtFee;
   if (input.stage === 'execution') {
-    courtFeeDiscounted = 0; // 执行申请费由被执行人承担，立案时申请人无需预交
+    courtFeeDiscounted = 0; // 执行申请费由被执行人承担，立案时无需预交
   } else if (isSummaryDiscount) {
     courtFeeDiscounted = Math.round(standardCourtFee * 0.5);
   }
 
-  // 财产保全费与保函费（仅在一审及二审财产案件中发生）
   const needPreservation = input.isPropertyCase && claimAmount > 10000 && input.stage !== 'execution';
   const preservationFee = needPreservation ? calculatePreservationFee(claimAmount) : 0;
   const preservationInsuranceFee =
@@ -63,7 +60,6 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     input.feeMode
   );
 
-  // 律师费是否可由对方全额买单（合同约定或法定支持）
   let canTransferLawyerFee = false;
   let lawyerFeeTransferReason = '';
 
@@ -79,7 +75,32 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
   }
 
   // ==========================================
-  // 3. 前期垫付与胜诉终局净成本精算
+  // 3. 异地差旅费精算（核心商业壁垒与省钱机会点）
+  // ==========================================
+  const isCrossRegion = Boolean(input.isOpponentCity);
+  let traditionalTravelCostMin = 0;
+  let traditionalTravelCostMax = 0;
+
+  if (isCrossRegion) {
+    // 若找本地律师去异地出庭办案：包含2~3次往返高铁/机票、酒店住宿及异地办案出差补贴
+    if (input.stage === 'first_instance_normal') {
+      traditionalTravelCostMin = 5000;
+      traditionalTravelCostMax = 12000;
+    } else if (input.stage === 'execution') {
+      traditionalTravelCostMin = 3000;
+      traditionalTravelCostMax = 6000;
+    } else {
+      traditionalTravelCostMin = 3500;
+      traditionalTravelCostMax = 8000;
+    }
+  }
+
+  // 平台直配起诉地同城律师，差旅费恒为 0 元！
+  const platformTravelCost = 0;
+  const travelCostSaved = isCrossRegion ? Math.round((traditionalTravelCostMin + traditionalTravelCostMax) / 2) : 0;
+
+  // ==========================================
+  // 4. 前期垫付与终局净成本精算
   // ==========================================
   let upfrontCostMin = courtFeeDiscounted + preservationFee + preservationInsuranceFee;
   let upfrontCostMax = upfrontCostMin;
@@ -99,7 +120,6 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
   let finalNetCostMax = 0;
 
   if (canTransferLawyerFee) {
-    // 胜诉后对方报销全部诉讼费与律师费，当事人自担成本仅为少量保函费
     finalNetCostMin = preservationInsuranceFee;
     finalNetCostMax = preservationInsuranceFee + Math.round(lawyerFeeRes.min * 0.05);
   } else {
@@ -123,6 +143,11 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     preservationFee,
     preservationInsuranceFee,
     executionFee,
+    isCrossRegion,
+    traditionalTravelCostMin,
+    traditionalTravelCostMax,
+    platformTravelCost,
+    travelCostSaved,
     upfrontCostMin,
     upfrontCostMax,
     finalNetCostMin: Math.max(0, finalNetCostMin),
@@ -132,15 +157,14 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
   };
 
   // ==========================================
-  // 4. 深度联动：时间周期与当事人精力消耗精算
+  // 5. 时间周期与当事人精力消耗精算
   // ==========================================
   let calendarMonthsMin = 3;
   let calendarMonthsMax = 6;
 
-  // 一线城市大法院案多人少，审限自然稍长
   const isBusyRegion = ['bj', 'sh', 'gd', 'zj', 'js'].includes(input.regionId);
   const regionMonthBuffer = isBusyRegion ? 0.5 : 0;
-  const weakEvidenceBuffer = input.evidenceLevel === 'weak' ? 1.0 : 0; // 证据弱需补充鉴定或调令
+  const weakEvidenceBuffer = input.evidenceLevel === 'weak' ? 1.0 : 0;
 
   if (input.stage === 'first_instance_summary') {
     calendarMonthsMin = 1.5;
@@ -156,31 +180,28 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     calendarMonthsMax = 6;
   }
 
-  // 当事人自身消耗的工时（随阶段与证据深度联动）
   let clientHoursWithLawyer = 4;
   let clientHoursSelf = 65;
 
   if (input.stage === 'execution') {
-    clientHoursWithLawyer = 2; // 仅需线上提供线索与签署执行授权
-    clientHoursSelf = 35;      // 跑执行局立案、查控沟通、领执行款
+    clientHoursWithLawyer = 2;
+    clientHoursSelf = isCrossRegion ? 55 : 35; // 异地执行自己跑需大量跨省奔波
   } else if (input.stage === 'second_instance') {
     clientHoursWithLawyer = 3;
-    clientHoursSelf = 45;
+    clientHoursSelf = isCrossRegion ? 60 : 45;
   } else {
     if (input.evidenceLevel === 'weak') {
       clientHoursWithLawyer = 5.5;
-      clientHoursSelf = 85;
+      clientHoursSelf = isCrossRegion ? 105 : 85;
     } else if (input.evidenceLevel === 'medium') {
       clientHoursWithLawyer = 4;
-      clientHoursSelf = 65;
+      clientHoursSelf = isCrossRegion ? 85 : 65;
     } else {
       clientHoursWithLawyer = 3;
-      clientHoursSelf = 50;
+      clientHoursSelf = isCrossRegion ? 70 : 50;
     }
   }
 
-  // 出庭次数深度联动：
-  // 1. 委托律师：执行阶段为0次；普通一二审财产纠纷为0次（律师特别授权出庭）；家事离婚案法官必须核实感情为1次
   let courtAppearancesWithLawyer = 0;
   if (input.stage === 'execution') {
     courtAppearancesWithLawyer = 0;
@@ -190,7 +211,6 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     courtAppearancesWithLawyer = 0;
   }
 
-  // 2. 自己打官司：执行需跑2~3次；二审需跑3次；一审需跑4~6次（证据弱时需更多次质证与鉴定）
   let courtAppearancesSelf = 5;
   if (input.stage === 'execution') {
     courtAppearancesSelf = 3;
@@ -200,10 +220,8 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     courtAppearancesSelf = input.evidenceLevel === 'weak' ? 6 : input.evidenceLevel === 'medium' ? 5 : 4;
   }
 
-  // 去律所次数：支持全程微信电子签与快递，核对原件最多1次
   const lawFirmVisitsWithLawyer = 0;
 
-  // 误工损失折算（结合填写的月薪或基准薪资）
   const hourlyWage = input.clientMonthlySalary > 0 ? input.clientMonthlySalary / 174 : 60;
   const clientLostWageSelf = Math.round(clientHoursSelf * hourlyWage);
   const clientLostWageWithLawyer = Math.round(clientHoursWithLawyer * hourlyWage);
@@ -270,25 +288,22 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
   };
 
   // ==========================================
-  // 5. 律师具体工作量工时与交付项 (动态匹配)
+  // 6. 律师具体工作量工时与交付项
   // ==========================================
   const workload = getLawyerWorkloadTemplate(claimAmount, input.category, input.stage, input.evidenceLevel);
 
   // ==========================================
-  // 6. 胜诉率、回款率与净期望收益精算 (ROI)
+  // 7. 胜诉率、回款率与净期望收益精算 (ROI)
   // ==========================================
   let winProbability = 0.85;
 
   if (input.stage === 'execution') {
-    // 执行阶段胜诉率已为100%（因为手头已有生效胜诉裁判依据）
     winProbability = 1.0;
   } else if (input.stage === 'second_instance') {
-    // 二审改判概率（司法大数据中二审改判率约为15%~35%，若有新关键证据则达65%）
     if (input.evidenceLevel === 'strong') winProbability = 0.65;
     else if (input.evidenceLevel === 'medium') winProbability = 0.40;
     else winProbability = 0.20;
   } else {
-    // 一审胜诉率（根据纠纷案由和证据完备度联动）
     const categoryWinBase: Record<string, { strong: number; medium: number; weak: number }> = {
       debt: { strong: 0.95, medium: 0.75, weak: 0.45 },
       labor: { strong: 0.92, medium: 0.70, weak: 0.40 },
@@ -305,7 +320,6 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     winProbability = rates[input.evidenceLevel] || 0.75;
   }
 
-  // 回款到位率（与已知事实线索、标的大小、保全联动）
   let recoveryProbability = 0.80;
   if (input.solvencyLevel === 'high') {
     recoveryProbability = input.category === 'tort' || input.category === 'ip' ? 0.95 : 0.90;
@@ -320,7 +334,6 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
   const expectedNetReturnMin = Math.round(claimAmount * winProbability * recoveryProbability - financial.finalNetCostMax);
   const expectedNetReturnMax = Math.round(claimAmount * winProbability * recoveryProbability - financial.finalNetCostMin);
 
-  // 维权性价比健康分 (ROI Score: 0~100)
   let roiScore = 50;
   if (input.isPropertyCase && claimAmount > 0) {
     const costRatio = avgFinalCost / claimAmount;

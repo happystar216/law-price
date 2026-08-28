@@ -10,6 +10,7 @@ import {
   Sparkles,
   Lock,
   Send,
+  Plane,
 } from 'lucide-react';
 
 interface MatchLawyerModalProps {
@@ -26,6 +27,7 @@ export const MatchLawyerModal: React.FC<MatchLawyerModalProps> = ({ analysis, on
 
   const category = CASE_CATEGORIES.find((c) => c.id === analysis.input.category) || CASE_CATEGORIES[0];
   const region = REGIONS.find((r) => r.id === analysis.input.regionId) || REGIONS[0];
+  const isCrossRegion = analysis.financial.isCrossRegion;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,9 +48,13 @@ export const MatchLawyerModal: React.FC<MatchLawyerModalProps> = ({ analysis, on
               <PhoneCall className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base">为您匹配当地专业律师</h3>
+              <h3 className="font-bold text-sm sm:text-base">
+                为您匹配【{region.name}】当地专业律师
+              </h3>
               <p className="text-[11px] text-blue-200/80">
-                根据您的案情与预算，精准对接 1~2 位擅长此类案件的资深律师
+                {isCrossRegion
+                  ? '直连起诉地同城律所 · 0差旅费 · 当地法院办案人脉更通畅'
+                  : '根据您的案情与预算，精准对接 1~2 位擅长此类案件的资深律师'}
               </p>
             </div>
           </div>
@@ -71,7 +77,8 @@ export const MatchLawyerModal: React.FC<MatchLawyerModalProps> = ({ analysis, on
               <div className="space-y-1">
                 <h4 className="text-lg font-black text-slate-900">需求已成功提交！</h4>
                 <p className="text-xs text-slate-600 max-w-xs mx-auto leading-relaxed">
-                  系统已为您匹配 <strong>{region.shortName}地区</strong> 擅长 <strong>【{category.name}】</strong> 的专业律师团队。
+                  系统已为您对接 <strong>{region.name}起诉地</strong> 擅长 <strong>【{category.name}】</strong> 的本地执业律师。
+                  {isCrossRegion && '（已享受平台直配 0 差旅费保障）'}
                 </p>
               </div>
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left text-xs space-y-2 max-w-sm mx-auto">
@@ -85,7 +92,7 @@ export const MatchLawyerModal: React.FC<MatchLawyerModalProps> = ({ analysis, on
                 </div>
                 <div className="flex items-center justify-between text-slate-500">
                   <span>服务承诺：</span>
-                  <span className="text-emerald-700 font-medium">免费初审案情 · 绝无骚扰</span>
+                  <span className="text-emerald-700 font-medium">免费初审案情 · 0差旅费 · 绝无骚扰</span>
                 </div>
               </div>
               <button
@@ -99,15 +106,33 @@ export const MatchLawyerModal: React.FC<MatchLawyerModalProps> = ({ analysis, on
           ) : (
             /* Form View */
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* 异地诉讼 0 差旅费特权横幅 */}
+              {isCrossRegion && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900">
+                  <div className="flex items-center space-x-2">
+                    <Plane className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div>
+                      <span className="font-bold">异地起诉专享：平台直连当地律师</span>
+                      <p className="text-[11px] text-emerald-700">
+                        免去跨省请律师往返高铁机票与出差补贴（立省约 ¥{analysis.financial.travelCostSaved.toLocaleString()} 元）
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-md font-bold shrink-0">
+                    差旅 ¥0
+                  </span>
+                </div>
+              )}
+
               {/* Current Case Snapshot */}
               <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-3.5 text-xs space-y-1.5">
                 <div className="font-bold text-blue-900 flex items-center justify-between">
                   <span className="flex items-center space-x-1">
                     <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                    <span>您测算的案情档案（已自动同步给律师）：</span>
+                    <span>您测算的案情档案（已自动同步给当地律师）：</span>
                   </span>
                   <span className="text-[10px] bg-blue-200/60 text-blue-800 px-1.5 py-0.2 rounded font-medium">
-                    {region.shortName}
+                    {region.shortName}起诉地
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-600 pt-0.5">
@@ -170,8 +195,8 @@ export const MatchLawyerModal: React.FC<MatchLawyerModalProps> = ({ analysis, on
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     '想尽快立案保全查封财产',
+                    '想要当地律师直办省差旅',
                     '想先发律师函协商催收',
-                    '想确认证据是否充分',
                     '想了解能否纯风险代理',
                   ].map((tag) => (
                     <button
@@ -196,7 +221,7 @@ export const MatchLawyerModal: React.FC<MatchLawyerModalProps> = ({ analysis, on
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-98 text-white font-bold text-xs sm:text-sm py-3 rounded-xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center space-x-2 mt-2"
               >
                 <Send className="w-4 h-4" />
-                <span>立即免费匹配律师 · 获取专属维权策略</span>
+                <span>立即免费匹配【{region.name}】专业律师 · 享 0 差旅特权</span>
               </button>
 
               {/* Privacy and Trust Badge */}
