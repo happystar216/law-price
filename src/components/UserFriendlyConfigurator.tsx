@@ -1297,7 +1297,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                 >
                   {REGIONS.map((r) => (
                     <option key={r.id} value={r.id}>
-                      📍 常住：{r.name}
+                      {r.name}
                     </option>
                   ))}
                 </select>
@@ -1331,7 +1331,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                   >
                     {REGIONS.map((r) => (
                       <option key={r.id} value={r.id}>
-                        🆔 户籍：{r.name}
+                        {r.name}
                       </option>
                     ))}
                   </select>
@@ -1362,7 +1362,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                 >
                   {REGIONS.map((r) => (
                     <option key={r.id} value={r.id}>
-                      🏢 对方常住/经营：{r.name}
+                      {r.name}
                     </option>
                   ))}
                 </select>
@@ -1396,7 +1396,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                   >
                     {REGIONS.map((r) => (
                       <option key={r.id} value={r.id}>
-                        🏠 对方老家户籍：{r.name}
+                        {r.name}
                       </option>
                     ))}
                   </select>
@@ -1427,7 +1427,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                 >
                   {REGIONS.map((r) => (
                     <option key={r.id} value={r.id}>
-                      📍 {r.name}
+                      {r.name}
                     </option>
                   ))}
                 </select>
