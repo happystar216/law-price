@@ -12,29 +12,29 @@ import {
   Calendar,
   TrendingUp,
   Briefcase,
-  FileText,
+  PhoneCall,
 } from 'lucide-react';
 
 interface MetricDetailModalProps {
   initialMetric: MetricType;
   analysis: FullCaseAnalysis;
   onClose: () => void;
-  onOpenReport: () => void;
+  onOpenMatchLawyer: () => void;
 }
 
 const TABS: { id: MetricType; label: string; icon: React.ReactNode }[] = [
-  { id: 'financial', label: '① 金钱花费明细', icon: <Coins className="w-3.5 h-3.5" /> },
-  { id: 'effort', label: '② 自己的时间', icon: <UserCheck className="w-3.5 h-3.5" /> },
-  { id: 'timeline', label: '③ 案件等待周期', icon: <Calendar className="w-3.5 h-3.5" /> },
-  { id: 'winrate', label: '④ 预估胜诉率', icon: <TrendingUp className="w-3.5 h-3.5" /> },
-  { id: 'workload', label: '⑤ 律师工作量', icon: <Briefcase className="w-3.5 h-3.5" /> },
+  { id: 'financial', label: '① 预计总花费', icon: <Coins className="w-3.5 h-3.5" /> },
+  { id: 'effort', label: '② 耽误多少时间', icon: <UserCheck className="w-3.5 h-3.5" /> },
+  { id: 'timeline', label: '③ 要等多久出结果', icon: <Calendar className="w-3.5 h-3.5" /> },
+  { id: 'winrate', label: '④ 胜诉与拿钱把握', icon: <TrendingUp className="w-3.5 h-3.5" /> },
+  { id: 'workload', label: '⑤ 律师干了多少活', icon: <Briefcase className="w-3.5 h-3.5" /> },
 ];
 
 export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({
   initialMetric,
   analysis,
   onClose,
-  onOpenReport,
+  onOpenMatchLawyer,
 }) => {
   const [activeTab, setActiveTab] = useState<MetricType>(initialMetric);
 
@@ -48,11 +48,11 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({
           </div>
           <div className="flex items-center space-x-2">
             <button
-              onClick={onOpenReport}
-              className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
+              onClick={onOpenMatchLawyer}
+              className="flex items-center space-x-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer shadow-sm"
             >
-              <FileText className="w-3.5 h-3.5" />
-              <span>生成完整PDF</span>
+              <PhoneCall className="w-3.5 h-3.5" />
+              <span>为您匹配专业律师</span>
             </button>
             <button
               onClick={onClose}
@@ -112,6 +112,21 @@ export const MetricDetailModal: React.FC<MetricDetailModalProps> = ({
               lawyerFeeMedian={analysis.financial.lawyerFeeMedian}
             />
           )}
+
+          {/* Bottom Callout in Modal */}
+          <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-4 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+            <div className="space-y-0.5">
+              <div className="font-bold text-xs sm:text-sm">想获取本案更精准的起诉方案与律师报价？</div>
+              <div className="text-[11px] text-blue-200">免费对接擅长此类案件的资深律师，15分钟内快速响应</div>
+            </div>
+            <button
+              onClick={onOpenMatchLawyer}
+              className="flex items-center justify-center space-x-1.5 bg-blue-500 hover:bg-blue-400 active:scale-95 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+            >
+              <PhoneCall className="w-3.5 h-3.5" />
+              <span>立即免费匹配律师</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

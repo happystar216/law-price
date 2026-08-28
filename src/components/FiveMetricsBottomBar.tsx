@@ -6,7 +6,7 @@ import {
   Calendar,
   TrendingUp,
   Briefcase,
-  FileText,
+  PhoneCall,
   ChevronUp,
 } from 'lucide-react';
 
@@ -15,39 +15,39 @@ export type MetricType = 'financial' | 'effort' | 'timeline' | 'winrate' | 'work
 interface FiveMetricsBottomBarProps {
   analysis: FullCaseAnalysis;
   onOpenMetric: (metric: MetricType) => void;
-  onOpenReport: () => void;
+  onOpenMatchLawyer: () => void;
 }
 
 export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
   analysis,
   onOpenMetric,
-  onOpenReport,
+  onOpenMatchLawyer,
 }) => {
   const { financial, timeAndEffort, roi, workload } = analysis;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/98 backdrop-blur-xl border-t border-slate-800 text-white shadow-2xl safe-area-bottom">
       <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 space-y-2">
-        {/* 顶部通俗提示 */}
-        <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/80 pb-1.5 px-1">
-          <div className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-medium text-slate-300">
+        {/* 顶部通俗提示 + 匹配律师按钮 */}
+        <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/80 pb-1.5 px-1 gap-2">
+          <div className="flex items-center space-x-1 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="font-medium text-slate-300 truncate">
               实时测算结果（点击下方任意卡片，查看详细怎么算的）：
             </span>
           </div>
           <button
-            onClick={onOpenReport}
-            className="flex items-center space-x-1 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer"
+            onClick={onOpenMatchLawyer}
+            className="flex items-center space-x-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 shadow-md shadow-blue-500/25"
           >
-            <FileText className="w-3.5 h-3.5" />
-            <span>导出报告</span>
+            <PhoneCall className="w-3.5 h-3.5" />
+            <span>为您匹配专业律师</span>
           </button>
         </div>
 
         {/* 5 大核心结果卡片（彻底直观化） */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-          {/* 1. 金钱花费（单一清晰总花费） */}
+          {/* 1. 金钱花费 */}
           <button
             type="button"
             onClick={() => onOpenMetric('financial')}

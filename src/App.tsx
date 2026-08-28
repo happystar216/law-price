@@ -5,16 +5,14 @@ import { Header } from './components/Header';
 import { UserFriendlyConfigurator } from './components/UserFriendlyConfigurator';
 import { FiveMetricsBottomBar, type MetricType } from './components/FiveMetricsBottomBar';
 import { MetricDetailModal } from './components/MetricDetailModal';
-import { LawyerQuoteCard } from './components/LawyerQuoteCard';
-import { ReportModal } from './components/ReportModal';
+import { MatchLawyerModal } from './components/MatchLawyerModal';
 import { FaqSection } from './components/FaqSection';
 import { Footer } from './components/Footer';
-import { Sparkles, SlidersHorizontal } from 'lucide-react';
+import { Sparkles, SlidersHorizontal, PhoneCall } from 'lucide-react';
 
 export function App() {
-  const [activeMode, setActiveMode] = useState<'client' | 'lawyer'>('client');
   const [activeMetricDetail, setActiveMetricDetail] = useState<MetricType | null>(null);
-  const [showReportModal, setShowReportModal] = useState(false);
+  const [showMatchLawyerModal, setShowMatchLawyerModal] = useState(false);
 
   const [caseInput, setCaseInput] = useState<CaseInputState>({
     category: 'debt',
@@ -50,15 +48,13 @@ export function App() {
       <Header
         currentRegionId={caseInput.regionId}
         onRegionChange={(id) => handleInputChange({ regionId: id })}
-        activeMode={activeMode}
-        onModeChange={setActiveMode}
-        onOpenReport={() => setShowReportModal(true)}
+        onOpenMatchLawyer={() => setShowMatchLawyerModal(true)}
         onScrollToFaq={scrollToFaq}
       />
 
       {/* Main Container */}
       <main className="flex-1 max-w-3xl w-full mx-auto px-3.5 sm:px-6 py-5 sm:py-6 space-y-4">
-        {/* Intro Header */}
+        {/* Top Banner */}
         <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-sm space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="inline-flex items-center space-x-1.5 bg-blue-500/20 text-blue-300 px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
@@ -67,7 +63,7 @@ export function App() {
             </div>
             <div className="flex items-center space-x-1 text-xs text-indigo-200 bg-white/10 px-2.5 py-1 rounded-xl">
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>实时演算中</span>
+              <span>实时测算中</span>
             </div>
           </div>
 
@@ -79,15 +75,27 @@ export function App() {
           </p>
         </div>
 
-        {/* Lawyer Quote Tool (if in Lawyer Mode) */}
-        {activeMode === 'lawyer' && (
-          <div className="animate-in fade-in slide-in-from-top-4 duration-300">
-            <LawyerQuoteCard analysis={analysis} />
-          </div>
-        )}
-
         {/* 100% User-Friendly Configurator */}
         <UserFriendlyConfigurator input={caseInput} onChange={handleInputChange} />
+
+        {/* Match Lawyer Banner Card */}
+        <div className="bg-gradient-to-r from-indigo-900 via-blue-900 to-slate-900 rounded-2xl p-5 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md border border-indigo-700/50">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <PhoneCall className="w-4 h-4 text-blue-300" />
+              <span className="font-bold text-sm sm:text-base">需要当地资深律师为您把关案情？</span>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              免费对接熟悉当地法院裁判尺度的专业律师，15分钟内提供定制化维权方案与精准报价。
+            </p>
+          </div>
+          <button
+            onClick={() => setShowMatchLawyerModal(true)}
+            className="bg-blue-500 hover:bg-blue-400 active:scale-95 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+          >
+            免费匹配律师
+          </button>
+        </div>
 
         {/* FAQ Section */}
         <FaqSection />
@@ -100,7 +108,7 @@ export function App() {
       <FiveMetricsBottomBar
         analysis={analysis}
         onOpenMetric={(metric) => setActiveMetricDetail(metric)}
-        onOpenReport={() => setShowReportModal(true)}
+        onOpenMatchLawyer={() => setShowMatchLawyerModal(true)}
       />
 
       {/* 5-Tab Detail Modal */}
@@ -109,16 +117,19 @@ export function App() {
           initialMetric={activeMetricDetail}
           analysis={analysis}
           onClose={() => setActiveMetricDetail(null)}
-          onOpenReport={() => {
+          onOpenMatchLawyer={() => {
             setActiveMetricDetail(null);
-            setShowReportModal(true);
+            setShowMatchLawyerModal(true);
           }}
         />
       )}
 
-      {/* Print / Export Report Modal */}
-      {showReportModal && (
-        <ReportModal analysis={analysis} onClose={() => setShowReportModal(false)} />
+      {/* Match Lawyer Lead Modal */}
+      {showMatchLawyerModal && (
+        <MatchLawyerModal
+          analysis={analysis}
+          onClose={() => setShowMatchLawyerModal(false)}
+        />
       )}
     </div>
   );
