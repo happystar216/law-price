@@ -1501,12 +1501,34 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                       </div>
                     </div>
 
+                    {/* 律所与法院跑腿次数清晰说明（彻底消除当事人奔波顾虑） */}
+                    <div className="bg-slate-50/90 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5 text-[11px]">
+                      <div className="flex items-center justify-between text-slate-700">
+                        <div className="flex items-center space-x-1">
+                          <span className="font-bold text-slate-800">🏢 去律所：</span>
+                          <span className="text-blue-700 font-black">
+                            {v.isHome ? '0~1 次 (全程可线上)' : '0 次 (线上直连)'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <span className="font-bold text-slate-800">🏛️ 亲自出庭：</span>
+                          <span className="text-emerald-700 font-black">
+                            {input.category === 'marriage' ? '1 次 (家事核对)' : '0 次 (律师全权代出庭)'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-[10px] text-slate-500 flex items-center justify-between border-t border-slate-200/60 pt-1">
+                        <span>委托律师：<strong>全程代办免请假</strong></span>
+                        <span>自己打：<strong className="text-rose-600">需跑法院 4~6 次</strong></span>
+                      </div>
+                    </div>
+
                     {/* 核心优势 */}
-                    <div className="text-[11px] text-slate-600 leading-relaxed">
+                    <div className="text-[11px] text-slate-600 leading-relaxed space-y-0.5">
                       <div><strong>🎯 优势：</strong>{v.practicalPro}</div>
                       {!v.isHome && (
-                        <div className="text-emerald-700 font-bold text-[10px] mt-0.5">
-                          ✨ 平台直配当地律师 · 差旅费 ¥0 元
+                        <div className="text-emerald-700 font-bold text-[10px]">
+                          ✨ 平台直配当地律师 · 差旅费 ¥0 元（省约 ¥7500）
                         </div>
                       )}
                     </div>
