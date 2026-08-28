@@ -1,7 +1,7 @@
 import React from 'react';
 import type {
+  CaseCategory,
   CaseInputState,
-  EvidenceLevel,
   LitigationStage,
   SolvencyLevel,
 } from '../types';
@@ -13,7 +13,13 @@ interface UserFriendlyConfiguratorProps {
   onChange: (updates: Partial<CaseInputState>) => void;
 }
 
-const USER_FRIENDLY_SCENARIOS = [
+// 100% 用户视角的通俗生活纠纷场景
+const USER_FRIENDLY_SCENARIOS: {
+  id: CaseCategory;
+  title: string;
+  desc: string;
+  emoji: string;
+}[] = [
   {
     id: 'debt',
     title: '朋友/熟人借钱不还',
@@ -64,6 +70,143 @@ const USER_FRIENDLY_SCENARIOS = [
   },
 ];
 
+// 根据不同纠纷类型，动态匹配针对性的证据材料选项
+const EVIDENCE_MAP: Record<
+  CaseCategory,
+  {
+    strong: { title: string; desc: string };
+    medium: { title: string; desc: string };
+    weak: { title: string; desc: string };
+  }
+> = {
+  debt: {
+    strong: {
+      title: '借条原件 + 银行/微信转账流水',
+      desc: '白纸黑字写明借款金额与归还时间，转账流水清晰',
+    },
+    medium: {
+      title: '仅有微信转账或聊天催款记录',
+      desc: '没打正规纸质借条，但微信聊天里对方承认借款事实',
+    },
+    weak: {
+      title: '现金借出 / 仅有口头承诺',
+      desc: '没有书面借条，转账记录也不全，需要律师调取证据',
+    },
+  },
+  labor: {
+    strong: {
+      title: '劳动合同 + 考勤记录 + 工资流水 + 辞退通知',
+      desc: '用工关系与欠薪/违法辞退证据链完整，仲裁支持率极高',
+    },
+    medium: {
+      title: '有工牌/微信工作群/转账，无正式合同',
+      desc: '未签订正规劳动合同，但能证明实际工作事实与工资发放',
+    },
+    weak: {
+      title: '现金发薪 / 缺少上下班打卡凭证',
+      desc: '缺少直接证明用工关系的材料，需律师申请调取社保记录',
+    },
+  },
+  contract: {
+    strong: {
+      title: '买卖合同 + 送货签收单 + 双方对账单',
+      desc: '合同双方盖章签字，货物签收与欠款金额双方均已确认',
+    },
+    medium: {
+      title: '微信沟通订货 + 银行转账凭证',
+      desc: '未签订正规盖章合同，但在微信上有明确订单与付款记录',
+    },
+    weak: {
+      title: '口头约定 / 送货金额双方有争议',
+      desc: '缺少收货人签字确认的签收单，货款数额存在分歧',
+    },
+  },
+  real_estate: {
+    strong: {
+      title: '租房合同 + 押金收据 + 房屋交接视频',
+      desc: '租期到期、押金金额明确，房屋完好交付证据充足',
+    },
+    medium: {
+      title: '有微信转账押金记录 + 催退聊天记录',
+      desc: '合同丢失或未盖章，但转账记录与催要押金记录明确',
+    },
+    weak: {
+      title: '口头租房 / 房屋损坏责任有争议',
+      desc: '无书面合同，退房时未留下房屋现状验收与交接凭证',
+    },
+  },
+  tort: {
+    strong: {
+      title: '事故责任认定书 + 医药费发票 + 伤残鉴定',
+      desc: '交警或警方责任认定明确，医疗费与误工费票据齐全',
+    },
+    medium: {
+      title: '有事故认定书 + 部分医药费单据',
+      desc: '责任清楚，但尚未做伤残等级鉴定或缺少部分误工证明',
+    },
+    weak: {
+      title: '事故责任划分有争议 / 缺少诊断票据',
+      desc: '责任归属不清或私下协商未果，缺少正规伤情诊断证明',
+    },
+  },
+  marriage: {
+    strong: {
+      title: '房产证/行驶证 + 银行存款流水 + 协议/遗嘱',
+      desc: '共同财产或遗产产权清晰明确，证据链完整无争议',
+    },
+    medium: {
+      title: '知晓财产线索，但流水在对方掌控中',
+      desc: '知晓对方开户行或房产，需律师协助申请法院调查令调取',
+    },
+    weak: {
+      title: '对方隐匿转移财产 / 财产线索不明',
+      desc: '对方名下资产隐蔽，需律师介入进行深度财产线索排查',
+    },
+  },
+  ip: {
+    strong: {
+      title: '作品登记/商标证书 + 时间戳可信公证书',
+      desc: '原创权属证明清晰，侵权网页/产品已被公证固定证据',
+    },
+    medium: {
+      title: '有设计底稿与最早发布记录，尚未公证',
+      desc: '能证明原创在先，但侵权网页尚未公证，容易被对方删除',
+    },
+    weak: {
+      title: '权属证明不完善 / 侵权证据不充分',
+      desc: '原创时间节点证据不足，需律师补充指导取证以防灭失',
+    },
+  },
+  company: {
+    strong: {
+      title: '公司章程 + 股东出资凭证 + 股东会决议',
+      desc: '股权结构清晰，出资与分红证据确凿',
+    },
+    medium: {
+      title: '有合伙协议与转账流水，未办理工商变更',
+      desc: '存在实际出资事实，但工商登记与实际持股不一致',
+    },
+    weak: {
+      title: '口头入股协议 / 财务账目混乱',
+      desc: '缺少正式股东协议，需律师申请查账审计',
+    },
+  },
+  other: {
+    strong: {
+      title: '书面协议原件 + 完整付款与履约凭证',
+      desc: '法律事实清楚，付款及违约证据链完整',
+    },
+    medium: {
+      title: '微信聊天记录 + 部分银行转账凭证',
+      desc: '有基础往来记录，但缺乏正规书面合同',
+    },
+    weak: {
+      title: '主要靠口头沟通，缺乏直接书面凭证',
+      desc: '需通过电话录音、发律师函等方式补充固定案件事实',
+    },
+  },
+};
+
 const USER_AMOUNTS = [
   { label: '2万以内', val: 20000 },
   { label: '5万', val: 50000 },
@@ -79,6 +222,9 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
   input,
   onChange,
 }) => {
+  const currentEvidenceOptions = EVIDENCE_MAP[input.category] || EVIDENCE_MAP.debt;
+  const currentCategory = USER_FRIENDLY_SCENARIOS.find((s) => s.id === input.category) || USER_FRIENDLY_SCENARIOS[0];
+
   return (
     <div className="space-y-4">
       {/* 问题 1：你遇到了什么事？ */}
@@ -102,7 +248,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
               <button
                 key={sc.id}
                 type="button"
-                onClick={() => onChange({ category: sc.id as any })}
+                onClick={() => onChange({ category: sc.id })}
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative flex items-start space-x-3 ${
                   isSelected
                     ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
@@ -189,7 +335,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 3：手头有哪些证据凭证？ */}
+      {/* 问题 3：手头保存了哪些材料？（已根据上方的纠纷类型动态精准匹配！） */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -197,64 +343,98 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
               3
             </span>
             <h3 className="font-bold text-sm sm:text-base text-slate-900">
-              你手头保存了哪些凭据材料？（直接决定胜诉把握）
+              关于【{currentCategory.title}】，你手头保存了哪些材料？
             </h3>
           </div>
+          <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold hidden sm:inline">
+            已为您定制专属证据项
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          {[
-            {
-              id: 'strong',
-              title: '证据很全，白纸黑字',
-              desc: '有借条/合同/签收单原件 + 银行转账记录，非常清楚',
-              tag: '胜诉把握大',
-              tagColor: 'bg-emerald-100 text-emerald-800',
-            },
-            {
-              id: 'medium',
-              title: '证据一般，稍有欠缺',
-              desc: '只有微信聊天截图或部分转账，没有正式盖章/签字的协议',
-              tag: '需要补充质证',
-              tagColor: 'bg-blue-100 text-blue-800',
-            },
-            {
-              id: 'weak',
-              title: '主要靠口头，凭证很少',
-              desc: '主要通过口头约定或现金交易，找不到直接的书面记录',
-              tag: '需调查取证',
-              tagColor: 'bg-amber-100 text-amber-800',
-            },
-          ].map((ev) => {
-            const isSelected = input.evidenceLevel === ev.id;
-            return (
-              <button
-                key={ev.id}
-                type="button"
-                onClick={() => onChange({ evidenceLevel: ev.id as EvidenceLevel })}
-                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
-                  isSelected
-                    ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20 text-emerald-950 font-semibold shadow-xs'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-                }`}
-              >
-                {isSelected && (
-                  <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </span>
-                )}
-                <div className="flex items-center space-x-1.5">
-                  <span className="font-bold text-xs sm:text-sm">{ev.title}</span>
-                </div>
-                <div className="mt-1">
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${ev.tagColor}`}>
-                    {ev.tag}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">{ev.desc}</p>
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+          {/* 证据充分 */}
+          <button
+            type="button"
+            onClick={() => onChange({ evidenceLevel: 'strong' })}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+              input.evidenceLevel === 'strong'
+                ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20 text-emerald-950 font-semibold shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            {input.evidenceLevel === 'strong' && (
+              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+            )}
+            <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+              {currentEvidenceOptions.strong.title}
+            </div>
+            <div className="mt-1">
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-emerald-100 text-emerald-800">
+                胜诉把握大 (~90%)
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              {currentEvidenceOptions.strong.desc}
+            </p>
+          </button>
+
+          {/* 证据中等 */}
+          <button
+            type="button"
+            onClick={() => onChange({ evidenceLevel: 'medium' })}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+              input.evidenceLevel === 'medium'
+                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            {input.evidenceLevel === 'medium' && (
+              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+            )}
+            <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+              {currentEvidenceOptions.medium.title}
+            </div>
+            <div className="mt-1">
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-blue-100 text-blue-800">
+                胜诉率中等 (~65%)
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              {currentEvidenceOptions.medium.desc}
+            </p>
+          </button>
+
+          {/* 证据较弱 */}
+          <button
+            type="button"
+            onClick={() => onChange({ evidenceLevel: 'weak' })}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+              input.evidenceLevel === 'weak'
+                ? 'border-amber-600 bg-amber-50/70 ring-2 ring-amber-500/20 text-amber-950 font-semibold shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            {input.evidenceLevel === 'weak' && (
+              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+            )}
+            <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+              {currentEvidenceOptions.weak.title}
+            </div>
+            <div className="mt-1">
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-amber-100 text-amber-800">
+                需律师调查补充 (~40%)
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              {currentEvidenceOptions.weak.desc}
+            </p>
+          </button>
         </div>
       </section>
 
