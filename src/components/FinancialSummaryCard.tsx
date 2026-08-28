@@ -118,7 +118,7 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({ fina
               )}
             </div>
             <div className="hidden sm:block sm:col-span-3 text-right text-slate-400 text-[11px]">
-              起诉地省律协指导标准
+              起诉地当地行业指导参考
             </div>
           </div>
 

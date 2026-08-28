@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
           <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300">
             <span className="flex items-center space-x-1 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>数据来源：各省律协参考标准</span>
+              <span>数据来源：各省司法实践与行业参考标准</span>
             </span>
             <span className="flex items-center space-x-1 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
               <Cloud className="w-3.5 h-3.5 text-blue-400" />

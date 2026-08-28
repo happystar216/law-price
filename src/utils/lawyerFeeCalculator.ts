@@ -86,7 +86,7 @@ export function calculateLawyerFee(
   const riskRate = Math.min(0.18, region.riskFeeCap);
   const riskEst = Math.round(amount * riskRate);
 
-  let notes = `${region.shortName}地区律协参考标准计算`;
+  let notes = `${region.shortName}当地市场参考标准计算`;
   if (feeMode === 'risk') {
     notes = '纯风险代理：前期通常收取极低材料费/0元，胜诉实际回款后按15%~25%提成。';
   } else if (feeMode === 'half_risk') {
