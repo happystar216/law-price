@@ -5,7 +5,7 @@ import type {
   LitigationStage,
 } from '../types';
 import { REGIONS } from '../data/regions';
-import { Check, MapPin, Sparkles } from 'lucide-react';
+import { Check, MapPin, Sparkles, ShieldCheck, DollarSign } from 'lucide-react';
 
 interface UserFriendlyConfiguratorProps {
   input: CaseInputState;
@@ -388,7 +388,7 @@ const EVIDENCE_MAP: Record<
   },
 };
 
-// 根据不同纠纷类型，让用户选择已知的【客观事实线索】而不是主观判断经济好坏
+// 根据不同纠纷类型，让用户选择已知的【客观事实线索】
 const FACT_MAP: Record<
   CaseCategory,
   {
@@ -583,7 +583,7 @@ const STAGE_FACT_OPTIONS: {
   },
 ];
 
-// 根据不同纠纷类型，提供针对性的法律管辖地选项（如：出借人地 vs 借款人地 / 工作地 vs 公司地 / 房屋所在地）
+// 根据不同纠纷类型，提供针对性的法律管辖地选项
 interface JurisdictionOption {
   id: string;
   title: string;
@@ -740,12 +740,15 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
   const currentJurisdictionOptions = JURISDICTION_MAP[input.category] || JURISDICTION_MAP.debt;
   const currentCategory = USER_FRIENDLY_SCENARIOS.find((s) => s.id === input.category) || USER_FRIENDLY_SCENARIOS[0];
 
-  // 记录选中的管辖连接点（如出借人地 vs 借款人地）
   const [selectedJurisdictionId, setSelectedJurisdictionId] = useState<string>(
     currentJurisdictionOptions[0]?.id || 'default'
   );
 
   const activeJurisdiction = currentJurisdictionOptions.find((j) => j.id === selectedJurisdictionId) || currentJurisdictionOptions[0];
+
+  // 严格依据纠纷类型，决定是否展示“合同约定律师费承担”以及“薪资输入”
+  const supportsContractFeeClause = ['debt', 'contract', 'real_estate', 'company', 'other'].includes(input.category);
+  const supportsWageInput = ['labor', 'tort', 'debt'].includes(input.category);
 
   return (
     <div className="space-y-4">
@@ -779,6 +782,10 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                   onChange({
                     category: newCategory,
                     claimAmount: input.isPropertyCase ? defaultAmount : 0,
+                    // If switching to a category that doesn't support contract fee clause, reset it
+                    hasContractFeeClause: ['debt', 'contract', 'real_estate', 'company', 'other'].includes(newCategory)
+                      ? input.hasContractFeeClause
+                      : false,
                   });
                 }}
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative flex items-start space-x-3 ${
@@ -858,7 +865,6 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
               </div>
             </div>
 
-            {/* 动态快捷金额按钮 */}
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 pt-1">
               {currentClaimConfig.quickAmounts.map((q) => {
                 const isSelected = input.claimAmount === q.val;
@@ -879,7 +885,6 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
               })}
             </div>
 
-            {/* 自定义拖动与输入 */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center pt-1">
               <div className="sm:col-span-2">
                 <input
@@ -1174,7 +1179,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
           </div>
         </div>
 
-        {/* 5.2 案件定制的管辖城市连接点选择（根据借贷/劳动/买卖等法律规则可在家门口或对方城市打） */}
+        {/* 5.2 案件定制的管辖城市连接点 */}
         <div className="pt-4 border-t border-slate-100 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-1.5">
@@ -1188,7 +1193,6 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             </span>
           </div>
 
-          {/* 管辖连接点双选卡片 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {currentJurisdictionOptions.map((j) => {
               const isSelected = selectedJurisdictionId === j.id;
@@ -1219,7 +1223,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             })}
           </div>
 
-          {/* 法律管辖科普提示 */}
+          {/* 法律管辖依据 */}
           <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200/60 text-xs flex items-start space-x-2 text-slate-700">
             <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-[11px] leading-relaxed">
@@ -1248,53 +1252,98 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 6：两个省钱小开关 */}
+      {/* 问题 6：按纠纷类型智能匹配的特殊维权权益与索赔参数（不再胡乱出现） */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
         <div className="flex items-center space-x-2">
           <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
             6
           </span>
           <h3 className="font-bold text-sm sm:text-base text-slate-900">
-            两个维权小开关（是否能让对方买单 / 自身误工）
+            【{currentCategory.title}】专属维权小贴士与参数
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          <label className="flex items-start space-x-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer hover:bg-slate-100/70 transition-colors">
-            <input
-              type="checkbox"
-              checked={input.hasContractFeeClause}
-              onChange={(e) => onChange({ hasContractFeeClause: e.target.checked })}
-              className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
-            />
-            <div className="text-xs">
-              <span className="font-bold text-slate-900">
-                合同或借条里写过「谁违约谁掏律师费」
-              </span>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                如果有写，法院判决胜诉后通常直接判令被告全额报销您的律师费！
-              </p>
-            </div>
-          </label>
-
-          <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-2">
-            <div className="text-xs">
-              <span className="font-bold text-slate-900">你平时大约月薪 (元)</span>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                用于换算自己亲自打官司请假扣工资划不划算
-              </p>
-            </div>
-            <div className="relative w-24 shrink-0">
-              <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-xs">¥</span>
+        <div className="space-y-3 pt-1">
+          {/* A. 合同类纠纷专属：违约方承担律师费约定开关 */}
+          {supportsContractFeeClause && (
+            <label className="flex items-start space-x-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer hover:bg-slate-100/70 transition-colors">
               <input
-                type="number"
-                value={input.clientMonthlySalary || ''}
-                onChange={(e) => onChange({ clientMonthlySalary: Math.max(0, Number(e.target.value)) })}
-                placeholder="10000"
-                className="w-full pl-6 pr-2 py-1 text-xs font-bold bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                type="checkbox"
+                checked={input.hasContractFeeClause}
+                onChange={(e) => onChange({ hasContractFeeClause: e.target.checked })}
+                className="mt-0.5 w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
               />
+              <div className="text-xs">
+                <span className="font-bold text-slate-900">
+                  借条、合同或协议里写过「违约方承担守约方律师费」吗？
+                </span>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  若有白纸黑字约定，法院判决胜诉后通常直接判令被告全额报销您的律师费（最终净支出 ¥0 元）！
+                </p>
+              </div>
+            </label>
+          )}
+
+          {/* B. 知识产权专属：法定全额报销律师费提示 */}
+          {input.category === 'ip' && (
+            <div className="p-3.5 bg-emerald-50/80 rounded-xl border border-emerald-200 text-xs flex items-start space-x-2.5 text-emerald-900">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold">✨ 法定全包保障：</span>
+                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                  依据《著作权法》《商标法》及最高法司法解释，知识产权侵权案件中，权利人为制止侵权行为所支付的合理开支（包括律师费、公证费），<strong>依法全部由败诉侵权方全额赔偿承担</strong>！
+                </p>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* C. 婚姻家事专属：调解减免诉讼费提示 */}
+          {input.category === 'marriage' && (
+            <div className="p-3.5 bg-purple-50/80 rounded-xl border border-purple-200 text-xs flex items-start space-x-2.5 text-purple-900">
+              <Sparkles className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold">💡 家事审判调解减免规则：</span>
+                <p className="text-[11px] text-purple-800 leading-relaxed">
+                  婚姻与遗产纠纷中，法院在开庭前依法必须先行组织调解。若双方在法官主持下达成调解协议结案，<strong>法院减半收取案件受理费</strong>，且调解书具有与判决书同等的强制执行效力。
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* D. 劳动纠纷与车祸伤害专属：薪酬/误工月收入输入（作为索赔核心参数） */}
+          {supportsWageInput && (
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3">
+              <div className="text-xs space-y-0.5">
+                <span className="font-bold text-slate-900 flex items-center space-x-1">
+                  <DollarSign className="w-3.5 h-3.5 text-blue-600" />
+                  <span>
+                    {input.category === 'labor'
+                      ? '你的月薪标准 / 离职前12个月平均工资 (元)'
+                      : input.category === 'tort'
+                      ? '你受伤前的正常月收入 / 误工基准 (元)'
+                      : '你平时的月薪估算 (元)'}
+                  </span>
+                </span>
+                <p className="text-[11px] text-slate-500">
+                  {input.category === 'labor'
+                    ? '作为劳动仲裁计算拖欠工资、未休年假及2N/N+1经济赔偿金的法定基数'
+                    : input.category === 'tort'
+                    ? '直接决定依法向肇事方及保险公司索赔的误工费数额'
+                    : '用于精确换算自己亲自请假跑法院的误工机会成本'}
+                </p>
+              </div>
+              <div className="relative w-28 shrink-0">
+                <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 text-xs font-bold">¥</span>
+                <input
+                  type="number"
+                  value={input.clientMonthlySalary || ''}
+                  onChange={(e) => onChange({ clientMonthlySalary: Math.max(0, Number(e.target.value)) })}
+                  placeholder="10000"
+                  className="w-full pl-6 pr-2 py-1.5 text-xs font-bold bg-white rounded-lg border border-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>
