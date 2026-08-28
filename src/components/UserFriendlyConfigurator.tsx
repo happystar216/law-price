@@ -1202,109 +1202,6 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             </div>
           )}
         </div>
-
-        {/* 4.3 律师梯队偏好（红圈大所 / 资深成熟 / 经济实惠） */}
-        <div className="pt-3 border-t border-slate-100 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-800">4.3 你倾向匹配哪一梯队的律师？</label>
-            <span className="text-[10px] text-slate-400">不同梯队律师资历与收费差异较大</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            {/* 1. 经济实惠型 */}
-            <button
-              type="button"
-              onClick={() => onChange({ lawyerTier: 'economic' })}
-              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between space-y-2 ${
-                (input.lawyerTier || 'senior') === 'economic'
-                  ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20 text-emerald-950 font-semibold shadow-xs'
-                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-              }`}
-            >
-              {(input.lawyerTier || 'senior') === 'economic' && (
-                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                </span>
-              )}
-              <div>
-                <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
-                  ⚡ 经济实惠型 · 青年骨干
-                </div>
-                <div className="mt-1">
-                  <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-emerald-100 text-emerald-800">
-                    高性价比 · 约市场 6.5 折
-                  </span>
-                </div>
-              </div>
-              <div className="text-[11px] text-slate-500 space-y-1 leading-relaxed border-t border-slate-200/50 pt-1.5">
-                <div>💰 <strong>收费亲民</strong>：起步费低，响应迅速</div>
-                <div>🎯 <strong>适合场景</strong>：借条清楚、证据完整、争议不大的标准小额纠纷</div>
-              </div>
-            </button>
-
-            {/* 2. 资深专案型 */}
-            <button
-              type="button"
-              onClick={() => onChange({ lawyerTier: 'senior' })}
-              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between space-y-2 ${
-                (input.lawyerTier || 'senior') === 'senior'
-                  ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
-                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-              }`}
-            >
-              {(input.lawyerTier || 'senior') === 'senior' && (
-                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                </span>
-              )}
-              <div>
-                <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
-                  ⭐ 资深专案型 · 5~10年熟手
-                </div>
-                <div className="mt-1">
-                  <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-blue-100 text-blue-800">
-                    🔥 80%当事人首选 · 稳健靠谱
-                  </span>
-                </div>
-              </div>
-              <div className="text-[11px] text-slate-500 space-y-1 leading-relaxed border-t border-slate-200/50 pt-1.5">
-                <div>⚖️ <strong>公道标准价</strong>：精通法庭质证与财产保全查控</div>
-                <div>🎯 <strong>适合场景</strong>：绝大多数民商事纠纷、货款买卖、房产与索赔</div>
-              </div>
-            </button>
-
-            {/* 3. 红圈知名合伙人 */}
-            <button
-              type="button"
-              onClick={() => onChange({ lawyerTier: 'elite' })}
-              className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between space-y-2 ${
-                (input.lawyerTier || 'senior') === 'elite'
-                  ? 'border-purple-600 bg-purple-50/70 ring-2 ring-purple-500/20 text-purple-950 font-semibold shadow-xs'
-                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-              }`}
-            >
-              {(input.lawyerTier || 'senior') === 'elite' && (
-                <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-purple-600 text-white flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                </span>
-              )}
-              <div>
-                <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
-                  👑 头部红圈所 · 知名合伙人
-                </div>
-                <div className="mt-1">
-                  <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-purple-100 text-purple-800">
-                    高端名所 · 疑难大案名状
-                  </span>
-                </div>
-              </div>
-              <div className="text-[11px] text-slate-500 space-y-1 leading-relaxed border-t border-slate-200/50 pt-1.5">
-                <div>🏆 <strong>名所大咖团队</strong>：资深合伙人主办，法学专家智囊支持</div>
-                <div>🎯 <strong>适合场景</strong>：千万级大标的、股权争夺、涉刑民交叉复杂商事</div>
-              </div>
-            </button>
-          </div>
-        </div>
       </section>
 
       {/* 问题 5：诉讼阶段 + 双方 4 大地点事实与智能比价管辖全景 */}
@@ -1636,6 +1533,121 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
               })}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 问题 6：你倾向匹配哪一梯队的律师？（最后一步：选定梯队与预算方案） */}
+      <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+              6
+            </span>
+            <div>
+              <h3 className="font-bold text-sm sm:text-base text-slate-900">
+                你倾向匹配哪一梯队的律师？
+              </h3>
+              <p className="text-[11px] text-slate-500">根据您的案件标的与预算偏好，选择最合适的执业律师梯队</p>
+            </div>
+          </div>
+          <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold hidden sm:inline">
+            最后一步 · 确定律师梯队
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+          {/* 1. 经济实惠型 */}
+          <button
+            type="button"
+            onClick={() => onChange({ lawyerTier: 'economic' })}
+            className={`p-4 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between space-y-2.5 ${
+              (input.lawyerTier || 'senior') === 'economic'
+                ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20 text-emerald-950 font-semibold shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            {(input.lawyerTier || 'senior') === 'economic' && (
+              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+            )}
+            <div>
+              <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+                ⚡ 经济实惠型 · 青年骨干
+              </div>
+              <div className="mt-1">
+                <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-emerald-100 text-emerald-800">
+                  高性价比 · 约市场 6.5 折
+                </span>
+              </div>
+            </div>
+            <div className="text-[11px] text-slate-500 space-y-1 leading-relaxed border-t border-slate-200/50 pt-2">
+              <div>💰 <strong>收费亲民</strong>：起步费低，响应迅速</div>
+              <div>🎯 <strong>适合场景</strong>：借条清楚、证据完整、争议不大的标准小额纠纷</div>
+            </div>
+          </button>
+
+          {/* 2. 资深专案型 */}
+          <button
+            type="button"
+            onClick={() => onChange({ lawyerTier: 'senior' })}
+            className={`p-4 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between space-y-2.5 ${
+              (input.lawyerTier || 'senior') === 'senior'
+                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            {(input.lawyerTier || 'senior') === 'senior' && (
+              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+            )}
+            <div>
+              <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+                ⭐ 资深专案型 · 5~10年熟手
+              </div>
+              <div className="mt-1">
+                <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-blue-100 text-blue-800">
+                  🔥 80%当事人首选 · 稳健靠谱
+                </span>
+              </div>
+            </div>
+            <div className="text-[11px] text-slate-500 space-y-1 leading-relaxed border-t border-slate-200/50 pt-2">
+              <div>⚖️ <strong>公道标准价</strong>：精通法庭质证与财产保全查控</div>
+              <div>🎯 <strong>适合场景</strong>：绝大多数民商事纠纷、货款买卖、房产与索赔</div>
+            </div>
+          </button>
+
+          {/* 3. 红圈知名合伙人 */}
+          <button
+            type="button"
+            onClick={() => onChange({ lawyerTier: 'elite' })}
+            className={`p-4 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between space-y-2.5 ${
+              (input.lawyerTier || 'senior') === 'elite'
+                ? 'border-purple-600 bg-purple-50/70 ring-2 ring-purple-500/20 text-purple-950 font-semibold shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            {(input.lawyerTier || 'senior') === 'elite' && (
+              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-purple-600 text-white flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+            )}
+            <div>
+              <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+                👑 头部红圈所 · 知名合伙人
+              </div>
+              <div className="mt-1">
+                <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-purple-100 text-purple-800">
+                  高端名所 · 疑难大案名状
+                </span>
+              </div>
+            </div>
+            <div className="text-[11px] text-slate-500 space-y-1 leading-relaxed border-t border-slate-200/50 pt-2">
+              <div>🏆 <strong>名所大咖团队</strong>：资深合伙人主办，法学专家智囊支持</div>
+              <div>🎯 <strong>适合场景</strong>：千万级大标的、股权争夺、涉刑民交叉复杂商事</div>
+            </div>
+          </button>
         </div>
       </section>
     </div>
