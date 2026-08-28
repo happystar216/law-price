@@ -32,12 +32,22 @@ export type SolvencyLevel =
   | 'medium'   // 正常生活工作，需法院查控
   | 'low';     // 失联跑路/欠款过多
 
+export type VenueRoute = 'client_place' | 'opponent_place' | 'incident_place';
+
 export interface CaseInputState {
   category: CaseCategory;
   isPropertyCase: boolean;       // 是否涉及财产标的
   claimAmount: number;           // 争议标的金额（元）
-  regionId: string;              // 管辖省份/城市ID
-  isOpponentCity: boolean;       // 是否选择在对方/异地城市起诉
+  
+  // 双方事实地点输入与智能管辖算路
+  clientRegionId: string;        // 当事人常住/户籍省市ID（如 'bj'）
+  opponentRegionId: string;      // 对方常住/注册地省市ID（如 'sc'）
+  incidentRegionId?: string;     // 房产地/事故地/工作地省市ID
+  chosenRoute: VenueRoute;       // 当前采纳的诉讼路线（默认原告地或首选地）
+  
+  regionId: string;              // 实际起诉地省市ID（用于费率核算）
+  isOpponentCity: boolean;       // 是否在异地起诉
+  
   stage: LitigationStage;        // 诉讼程序阶段
   feeMode: FeeMode;              // 偏好计费方式
   evidenceLevel: EvidenceLevel;  // 证据完备度
