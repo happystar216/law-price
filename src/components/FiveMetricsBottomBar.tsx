@@ -45,7 +45,7 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
           </button>
         </div>
 
-        {/* 5 大核心结果卡片（彻底直观化） */}
+        {/* 5 大核心结果卡片 */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
           {/* 1. 金钱花费 */}
           <button
@@ -77,7 +77,7 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
             </div>
           </button>
 
-          {/* 2. 自己的时间精力 */}
+          {/* 2. 自己的时间精力（含出庭与律所次数） */}
           <button
             type="button"
             onClick={() => onOpenMetric('effort')}
@@ -86,15 +86,15 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
             <div className="flex items-center justify-between text-[10px] text-emerald-400 font-bold">
               <span className="flex items-center space-x-1">
                 <UserCheck className="w-3 h-3 text-emerald-400" />
-                <span>② 耽误多少时间</span>
+                <span>② 耽误多少精力</span>
               </span>
               <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-emerald-300 transition-transform" />
             </div>
             <div className="text-xs sm:text-sm font-black text-emerald-300 mt-1 tracking-tight">
-              只需配合 ~{timeAndEffort.clientHoursWithLawyer} 小时
+              ~{timeAndEffort.clientHoursWithLawyer}小时 · 出庭{timeAndEffort.courtAppearancesWithLawyer}次
             </div>
             <div className="text-[10px] text-slate-400 truncate mt-0.5">
-              不用请假跑腿 (自己打需{timeAndEffort.clientHoursSelf}h)
+              去律所{timeAndEffort.lawFirmVisitsWithLawyer}次 · 律师全权代办
             </div>
           </button>
 

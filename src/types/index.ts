@@ -23,14 +23,14 @@ export type FeeMode =
   | 'hourly';   // 计时收费
 
 export type EvidenceLevel =
-  | 'strong'   // 证据确凿充分（借条+银行流水+确认函等，无瑕疵）
-  | 'medium'   // 核心证据具备，但存在瑕疵或需补充质证
-  | 'weak';    // 缺少直接书证，主要依靠间接推论或聊天记录
+  | 'strong'   // 证据确凿充分
+  | 'medium'   // 核心证据具备，但需补充质证
+  | 'weak';    // 缺少直接书证
 
 export type SolvencyLevel =
-  | 'high'     // 对方有明确足额财产（房产、车辆、正常经营账户）
-  | 'medium'   // 对方有收入或经营迹象，但需法院查控
-  | 'low';     // 对方失联、老赖无资产、濒临破产
+  | 'high'     // 有明确房产车辆/正常发薪营业
+  | 'medium'   // 正常生活工作，需法院查控
+  | 'low';     // 失联跑路/欠款过多
 
 export interface CaseInputState {
   category: CaseCategory;
@@ -59,7 +59,7 @@ export interface RegionConfig {
   minCaseFee: number;            // 基础件最低起步价
   tiers: FeeTier[];              // 阶梯费率表
   hourlyRateRange: [number, number]; // 计时收费参考区间（元/小时）
-  riskFeeCap: number;            // 风险代理最高上限（司法部规定最高一般不超 30%）
+  riskFeeCap: number;            // 风险代理最高上限
   description?: string;
 }
 
@@ -72,7 +72,7 @@ export interface FinancialBreakdown {
   lawyerFeeMax: number;          // 律师费参考区间上限
   lawyerFeeMedian: number;       // 律师费市场中位数
   
-  riskFeeEst: number;            // 若风险代理预计提成（按中位数回款及 18% 测算）
+  riskFeeEst: number;            // 若风险代理预计提成
   
   preservationFee: number;       // 财产保全费（最高5000元）
   preservationInsuranceFee: number; // 保全责任险费（约0.15%）
@@ -103,6 +103,10 @@ export interface TimeAndEffortBreakdown {
   
   clientHoursWithLawyer: number; // 委托律师后当事人需投入工时（小时）
   clientHoursSelf: number;       // 自己打官司预计耗费工时（小时）
+  
+  lawFirmVisitsWithLawyer: number;   // 委托律师后需去律所次数（0~1次）
+  courtAppearancesWithLawyer: number; // 委托律师后需亲自出庭次数（通常0次，家事1次）
+  courtAppearancesSelf: number;       // 自己打官司需跑法院次数（通常4~6次）
   
   clientLostWageSelf: number;    // 自己打官司折算误工机会成本（元）
   clientLostWageWithLawyer: number; // 委托律师后误工成本（元）

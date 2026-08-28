@@ -131,7 +131,7 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
       durationDays: 15,
       description: '收集整理材料、撰写起诉状、保全冻结、法院系统审核立案',
       courtAction: '审查起诉材料，分配案号并下达受理通知书',
-      clientAction: input.feeMode ? '委托律师一键代办，线上签署授权委托书' : '需自行学习格式要求，多次跑立案庭补正',
+      clientAction: '委托律师一键代办，线上签署授权委托书（无需跑立案庭）',
     },
     {
       name: '送达排期与庭前答辩',
@@ -145,19 +145,23 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
       durationDays: 45,
       description: '法庭调查、举证质证、法庭辩论、主审法官起草判决书',
       courtAction: '开庭审理记录笔录，合议庭评议并撰写判决书',
-      clientAction: '出庭参加诉讼（委托律师可由律师全权代为发言）',
+      clientAction: input.category === 'marriage' ? '家事案件需亲自出庭 1 次' : '律师全权代为出庭发言，当事人无需到场',
     },
     {
       name: '判决生效与申请执行',
       durationDays: 60,
       description: '判决书上诉期届满生效，若对方未履行，启动强制执行查控',
       courtAction: '执行网络查控系统总对总冻结银行卡、扣划财产、限高',
-      clientAction: '提供被执行人隐藏财产线索，跟进执行法官回款到账',
+      clientAction: '律师跟进执行法官回款到账，无需亲自跑法院执行局',
     },
   ];
 
   const clientHoursWithLawyer = 4;
   const clientHoursSelf = 65;
+
+  const lawFirmVisitsWithLawyer = 0; // 支持全程线上，核验原件最多1次
+  const courtAppearancesWithLawyer = input.category === 'marriage' ? 1 : 0; // 婚姻案件必须本人到庭，普通财产纠纷律师特别授权全权出庭
+  const courtAppearancesSelf = 5; // 自己打至少跑5次法院（立案、质证、开庭、领判决、立执行）
 
   const hourlyWage = input.clientMonthlySalary > 0 ? input.clientMonthlySalary / 174 : 60;
   const clientLostWageSelf = Math.round(clientHoursSelf * hourlyWage);
@@ -168,6 +172,9 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     calendarMonthsMax,
     clientHoursWithLawyer,
     clientHoursSelf,
+    lawFirmVisitsWithLawyer,
+    courtAppearancesWithLawyer,
+    courtAppearancesSelf,
     clientLostWageSelf,
     clientLostWageWithLawyer,
     timelineStages,
