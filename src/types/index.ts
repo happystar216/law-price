@@ -32,29 +32,40 @@ export type SolvencyLevel =
   | 'medium'   // 正常生活工作，需法院查控
   | 'low';     // 失联跑路/欠款过多
 
-export type VenueRoute = 'client_place' | 'opponent_place' | 'incident_place';
+export type VenueRoute = 'client_residence' | 'client_domicile' | 'opponent_residence' | 'opponent_domicile' | 'incident_place';
 
 export interface CaseInputState {
   category: CaseCategory;
   isPropertyCase: boolean;       // 是否涉及财产标的
   claimAmount: number;           // 争议标的金额（元）
   
-  // 双方事实地点输入与智能管辖算路
-  clientRegionId: string;        // 当事人常住/户籍省市ID（如 'bj'）
-  opponentRegionId: string;      // 对方常住/注册地省市ID（如 'sc'）
-  incidentRegionId?: string;     // 房产地/事故地/工作地省市ID
-  chosenRoute: VenueRoute;       // 当前采纳的诉讼路线（默认原告地或首选地）
+  // 双方 4 大地点事实（我方常住、我方户籍、对方常住、对方户籍）
+  clientResidenceRegionId: string; // 我方常住地（如北京）
+  clientDomicileRegionId: string;  // 我方户籍地（如河北）
+  clientDomicileSameAsResidence?: boolean;
   
-  regionId: string;              // 实际起诉地省市ID（用于费率核算）
-  isOpponentCity: boolean;       // 是否在异地起诉
+  opponentResidenceRegionId: string; // 对方常住/工作/经营地（如广东）
+  opponentDomicileRegionId: string;  // 对方户籍老家/注册地（如四川）
+  opponentDomicileSameAsResidence?: boolean;
   
-  stage: LitigationStage;        // 诉讼程序阶段
-  feeMode: FeeMode;              // 偏好计费方式
-  evidenceLevel: EvidenceLevel;  // 证据完备度
-  solvencyLevel: SolvencyLevel;  // 对方偿债能力与财产线索
-  hasContractFeeClause: boolean; // 合同是否明确约定败诉方承担律师费
-  clientMonthlySalary: number;   // 当事人月薪（元，用于机会成本折算）
-  customHourlyRate?: number;     // 律师自定义时薪
+  incidentRegionId?: string;       // 房产地/事故地/工作地省市ID
+  
+  chosenVenueKey: string;          // 当前选中的管辖法院Key
+  regionId: string;                // 实际起诉地省市ID（用于费率核算）
+  isOpponentCity: boolean;         // 是否在异地起诉
+  
+  // 兼容旧字段
+  clientRegionId?: string;
+  opponentRegionId?: string;
+  chosenRoute?: string;
+  
+  stage: LitigationStage;          // 诉讼程序阶段
+  feeMode: FeeMode;                // 偏好计费方式
+  evidenceLevel: EvidenceLevel;    // 证据完备度
+  solvencyLevel: SolvencyLevel;    // 对方偿债能力与财产线索
+  hasContractFeeClause: boolean;   // 合同是否明确约定败诉方承担律师费
+  clientMonthlySalary: number;     // 当事人月薪（元，用于机会成本折算）
+  customHourlyRate?: number;       // 律师自定义时薪
 }
 
 export interface FeeTier {

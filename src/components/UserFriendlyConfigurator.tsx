@@ -1,12 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type {
   CaseCategory,
   CaseInputState,
   LitigationStage,
-  VenueRoute,
 } from '../types';
 import { REGIONS } from '../data/regions';
-import { Check, MapPin, Sparkles, ShieldCheck, DollarSign, Building2, Home, Navigation } from 'lucide-react';
+import { calculateLawyerFee } from '../utils/lawyerFeeCalculator';
+import {
+  Check,
+  MapPin,
+  Sparkles,
+  ShieldCheck,
+  DollarSign,
+  Building2,
+  Home,
+  Navigation,
+  Scale,
+  Zap,
+  TrendingDown,
+} from 'lucide-react';
 
 interface UserFriendlyConfiguratorProps {
   input: CaseInputState;
@@ -70,7 +82,6 @@ const USER_FRIENDLY_SCENARIOS: {
   },
 ];
 
-// 根据不同纠纷类型，定制专属的金额问法、说明与常用金额快捷标签
 interface ClaimConfig {
   title: string;
   subtitle: string;
@@ -252,7 +263,6 @@ const CLAIM_CONFIG_MAP: Record<CaseCategory, ClaimConfig> = {
   },
 };
 
-// 根据不同纠纷类型，动态匹配针对性的证据材料选项
 const EVIDENCE_MAP: Record<
   CaseCategory,
   {
@@ -389,7 +399,6 @@ const EVIDENCE_MAP: Record<
   },
 };
 
-// 根据不同纠纷类型，让用户选择已知的【客观事实线索】
 const FACT_MAP: Record<
   CaseCategory,
   {
@@ -553,7 +562,6 @@ const FACT_MAP: Record<
   },
 };
 
-// 诉讼所处客观阶段
 const STAGE_FACT_OPTIONS: {
   id: LitigationStage;
   title: string;
@@ -593,33 +601,154 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
   const currentFactOptions = FACT_MAP[input.category] || FACT_MAP.debt;
   const currentCategory = USER_FRIENDLY_SCENARIOS.find((s) => s.id === input.category) || USER_FRIENDLY_SCENARIOS[0];
 
-  const clientRegion = REGIONS.find((r) => r.id === (input.clientRegionId || 'bj')) || REGIONS[0];
-  const opponentRegion = REGIONS.find((r) => r.id === (input.opponentRegionId || 'sc')) || REGIONS[4];
-  const incidentRegion = REGIONS.find((r) => r.id === (input.incidentRegionId || input.clientRegionId || 'bj')) || clientRegion;
+  // 4 个事实地点
+  const clientResidence = input.clientResidenceRegionId || input.clientRegionId || 'bj';
+  const [clientDomicileSame, setClientDomicileSame] = useState(input.clientDomicileSameAsResidence ?? true);
+  const clientDomicile = clientDomicileSame ? clientResidence : input.clientDomicileRegionId || 'hb';
 
-  const isSameCity = clientRegion.id === opponentRegion.id;
+  const opponentResidence = input.opponentResidenceRegionId || input.opponentRegionId || 'gd';
+  const [opponentDomicileSame, setOpponentDomicileSame] = useState(input.opponentDomicileSameAsResidence ?? false);
+  const opponentDomicile = opponentDomicileSame ? opponentResidence : input.opponentDomicileRegionId || 'sc';
 
-  // 严格依据纠纷类型，决定是否展示合同律师费转嫁条款（仅合同债务类）以及仅交通事故案的误工费基准
+  const incidentRegionId = input.incidentRegionId || clientResidence;
+
   const supportsContractFeeClause = ['debt', 'contract', 'real_estate', 'company', 'other'].includes(input.category);
   const isTortInjuryCase = input.category === 'tort';
 
-  // 切换起诉地路线的处理函数
-  const handleSelectRoute = (route: VenueRoute) => {
-    let targetRegionId = input.clientRegionId || 'bj';
-    let isOpponent = false;
+  // 计算多地管辖候选方案列表（自动去重）
+  interface VenueCandidate {
+    key: string;
+    regionId: string;
+    regionName: string;
+    regionShort: string;
+    venueTypeLabel: string;
+    advantageTag: string;
+    advantageTagColor: string;
+    legalGround: string;
+    practicalPro: string;
+    isHome: boolean;
+    lawyerFeeMedian: number;
+    feeDifferenceVsHome: number; // 相比我方常住地的律师费差价
+  }
 
-    if (route === 'opponent_place') {
-      targetRegionId = input.opponentRegionId || 'sc';
-      isOpponent = true;
-    } else if (route === 'incident_place') {
-      targetRegionId = input.incidentRegionId || input.clientRegionId || 'bj';
-      isOpponent = targetRegionId !== input.clientRegionId;
+  // 基准：我方常住地律师费
+  const claimAmt = input.isPropertyCase ? input.claimAmount : 0;
+  const baseLawyerFee = calculateLawyerFee(
+    clientResidence,
+    input.category,
+    claimAmt,
+    input.isPropertyCase,
+    input.stage,
+    input.feeMode
+  ).median;
+
+  const rawVenues: {
+    key: string;
+    regionId: string;
+    typeLabel: string;
+    tag: string;
+    tagColor: string;
+    legal: string;
+    practical: string;
+    isHome: boolean;
+  }[] = [
+    {
+      key: 'client_residence',
+      regionId: clientResidence,
+      typeLabel: '我方常住地法院',
+      tag: '⭐ 主场作战 · 零奔波最省心',
+      tagColor: 'bg-emerald-100 text-emerald-800',
+      legal: '出借人/守约方住所地为合同履行地，依法可直接在家门口立案',
+      practical: '在家门口办案，核验材料与立案最轻松，完全无需出差奔波',
+      isHome: true,
+    },
+  ];
+
+  if (!clientDomicileSame && clientDomicile !== clientResidence) {
+    rawVenues.push({
+      key: 'client_domicile',
+      regionId: clientDomicile,
+      typeLabel: '我方户籍地法院',
+      tag: '🆔 我方户籍管辖',
+      tagColor: 'bg-slate-100 text-slate-800',
+      legal: '原告住所地管辖连接点',
+      practical: '身份证老家法院，适合在老家有熟识律师或常住证明不齐备时选择',
+      isHome: false,
+    });
+  }
+
+  if (opponentResidence !== clientResidence) {
+    rawVenues.push({
+      key: 'opponent_residence',
+      regionId: opponentResidence,
+      typeLabel: '对方常住/经营地法院',
+      tag: '🏢 查封当前经营账户与工资',
+      tagColor: 'bg-blue-100 text-blue-800',
+      legal: '《民事诉讼法》第22条 被告经常居住地法定管辖',
+      practical: '当地法院就近查封对方当前的微信/支付宝零钱、银行流水及月工资',
+      isHome: false,
+    });
+  }
+
+  if (opponentDomicile !== clientResidence && opponentDomicile !== opponentResidence) {
+    rawVenues.push({
+      key: 'opponent_domicile',
+      regionId: opponentDomicile,
+      typeLabel: '对方户籍老家法院',
+      tag: '🎯 查封老家房车最快 · 💰 律师费超划算',
+      tagColor: 'bg-purple-100 text-purple-800',
+      legal: '《民事诉讼法》第22条 被告户籍住所地管辖',
+      practical: '当地法官下楼直接查封对方在老家的自建房、婚房与本地银行卡，执行回款极快！',
+      isHome: false,
+    });
+  }
+
+  // 去重生成最终候选卡片
+  const uniqueVenues: VenueCandidate[] = [];
+  const seenRegions = new Set<string>();
+
+  for (const v of rawVenues) {
+    if (!seenRegions.has(v.regionId)) {
+      seenRegions.add(v.regionId);
+      const rObj = REGIONS.find((r) => r.id === v.regionId) || REGIONS[0];
+      const feeRes = calculateLawyerFee(
+        v.regionId,
+        input.category,
+        claimAmt,
+        input.isPropertyCase,
+        input.stage,
+        input.feeMode
+      );
+      const feeDiff = feeRes.median - baseLawyerFee;
+
+      uniqueVenues.push({
+        key: v.key,
+        regionId: v.regionId,
+        regionName: rObj.name,
+        regionShort: rObj.shortName,
+        venueTypeLabel: v.typeLabel,
+        advantageTag: v.tag,
+        advantageTagColor: v.tagColor,
+        legalGround: v.legal,
+        practicalPro: v.practical,
+        isHome: v.isHome,
+        lawyerFeeMedian: feeRes.median,
+        feeDifferenceVsHome: feeDiff,
+      });
     }
+  }
 
+  const selectedVenueKey = input.chosenVenueKey || uniqueVenues[0]?.key || 'client_residence';
+
+  const handleSelectVenue = (v: VenueCandidate) => {
     onChange({
-      chosenRoute: route,
-      regionId: targetRegionId,
-      isOpponentCity: isOpponent,
+      chosenVenueKey: v.key,
+      regionId: v.regionId,
+      isOpponentCity: !v.isHome,
+      clientResidenceRegionId: clientResidence,
+      clientDomicileRegionId: clientDomicile,
+      opponentResidenceRegionId: opponentResidence,
+      opponentDomicileRegionId: opponentDomicile,
     });
   };
 
@@ -892,7 +1021,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 4：案件与对方具体事实（整合财产线索 + 特殊约定事实，无需多填无用信息） */}
+      {/* 问题 4：案件与对方具体事实（整合财产线索 + 特殊约定事实） */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -998,7 +1127,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
           </div>
         </div>
 
-        {/* 4.2 本案专属法律事实与特殊约定（自适应嵌入，无多余填表） */}
+        {/* 4.2 本案专属法律事实与特殊约定 */}
         <div className="pt-3 border-t border-slate-100 space-y-2.5">
           <label className="text-xs font-bold text-slate-800">4.2 本案合同约定与特殊维权事实：</label>
 
@@ -1048,7 +1177,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             </div>
           )}
 
-          {/* D. 仅人身损害/车祸索赔专属：发生意外前的月收入（用于精准核算误工费索赔额） */}
+          {/* D. 仅人身损害/车祸索赔专属：发生意外前的月收入 */}
           {isTortInjuryCase && (
             <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3">
               <div className="text-xs space-y-0.5">
@@ -1075,7 +1204,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 5：诉讼阶段 + 用户填事实地点，系统智能计算法定起诉地与最优路线 */}
+      {/* 问题 5：诉讼阶段 + 双方 4 大地点事实与智能比价管辖全景 */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-4">
         {/* 5.1 诉讼阶段 */}
         <div className="space-y-3">
@@ -1129,96 +1258,172 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
           </div>
         </div>
 
-        {/* 5.2 用户填客观地点事实，系统自动算路 */}
+        {/* 5.2 双方 4 大地点事实录入 */}
         <div className="pt-4 border-t border-slate-100 space-y-3.5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <div className="flex items-center space-x-1.5">
               <Navigation className="w-4 h-4 text-blue-600" />
               <h4 className="font-bold text-xs sm:text-sm text-slate-900">
-                双方地点事实（填写真实位置，系统自动为您测算法定起诉地）
+                双方 4 大地点事实（填写真实位置，系统一秒算管辖与比价）
               </h4>
             </div>
-            <span className="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold self-start sm:self-auto">
-              智能司法管辖算路引擎
+            <span className="text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-bold self-start sm:self-auto">
+              多地管辖 · 价格套利分析
             </span>
           </div>
 
-          {/* 地点事实输入行 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
-            {/* 你的位置 */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-800 flex items-center space-x-1">
+          {/* 4 地点两栏输入框 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200/80">
+            {/* 我方地点事实 */}
+            <div className="space-y-3 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-2xs">
+              <div className="text-xs font-black text-blue-900 flex items-center space-x-1 border-b border-slate-100 pb-2">
                 <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                <span>你目前常住 / 户籍在哪个省市？</span>
-              </label>
-              <select
-                value={input.clientRegionId || 'bj'}
-                onChange={(e) => {
-                  const newClient = e.target.value;
-                  const newRoute = input.chosenRoute || 'client_place';
-                  onChange({
-                    clientRegionId: newClient,
-                    regionId: newRoute === 'opponent_place' ? input.opponentRegionId : newClient,
-                    isOpponentCity: newRoute === 'opponent_place' && newClient !== input.opponentRegionId,
-                  });
-                }}
-                className="w-full bg-white border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-              >
-                {REGIONS.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    📍 我在：{r.name}
-                  </option>
-                ))}
-              </select>
+                <span>我方事实位置（原告方）</span>
+              </div>
+
+              {/* 我方常住地 */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-700">1. 我目前经常居住省市：</label>
+                <select
+                  value={clientResidence}
+                  onChange={(e) => {
+                    const newRes = e.target.value;
+                    onChange({
+                      clientResidenceRegionId: newRes,
+                      clientRegionId: newRes,
+                    });
+                  }}
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  {REGIONS.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      📍 常住：{r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 我方户籍地 */}
+              <div className="space-y-1 pt-1 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700">2. 我身份证户籍地：</label>
+                  <label className="text-[10px] text-slate-500 flex items-center space-x-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={clientDomicileSame}
+                      onChange={(e) => {
+                        setClientDomicileSame(e.target.checked);
+                        onChange({ clientDomicileSameAsResidence: e.target.checked });
+                      }}
+                      className="w-3 h-3 text-blue-600 rounded"
+                    />
+                    <span>与常住地一致</span>
+                  </label>
+                </div>
+                {!clientDomicileSame && (
+                  <select
+                    value={clientDomicile}
+                    onChange={(e) => {
+                      const newDom = e.target.value;
+                      onChange({ clientDomicileRegionId: newDom });
+                    }}
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    {REGIONS.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        🆔 户籍：{r.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
             </div>
 
-            {/* 对方位置 */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-800 flex items-center space-x-1">
+            {/* 对方地点事实 */}
+            <div className="space-y-3 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-2xs">
+              <div className="text-xs font-black text-indigo-900 flex items-center space-x-1 border-b border-slate-100 pb-2">
                 <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                <span>对方（欠钱人/公司）在哪个省市？</span>
-              </label>
-              <select
-                value={input.opponentRegionId || 'sc'}
-                onChange={(e) => {
-                  const newOpponent = e.target.value;
-                  const newRoute = input.chosenRoute || 'client_place';
-                  onChange({
-                    opponentRegionId: newOpponent,
-                    regionId: newRoute === 'opponent_place' ? newOpponent : input.clientRegionId,
-                    isOpponentCity: newRoute === 'opponent_place' && input.clientRegionId !== newOpponent,
-                  });
-                }}
-                className="w-full bg-white border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-              >
-                {REGIONS.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    🏢 对方在：{r.name}
-                  </option>
-                ))}
-              </select>
+                <span>对方事实位置（被告人/欠款公司）</span>
+              </div>
+
+              {/* 对方常住/经营地 */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-700">3. 对方常住/工作/经营省市：</label>
+                <select
+                  value={opponentResidence}
+                  onChange={(e) => {
+                    const newRes = e.target.value;
+                    onChange({
+                      opponentResidenceRegionId: newRes,
+                      opponentRegionId: newRes,
+                    });
+                  }}
+                  className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  {REGIONS.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      🏢 对方常住/经营：{r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 对方户籍老家/注册地 */}
+              <div className="space-y-1 pt-1 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-700">4. 对方身份证户籍老家/公司注册地：</label>
+                  <label className="text-[10px] text-slate-500 flex items-center space-x-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={opponentDomicileSame}
+                      onChange={(e) => {
+                        setOpponentDomicileSame(e.target.checked);
+                        onChange({ opponentDomicileSameAsResidence: e.target.checked });
+                      }}
+                      className="w-3 h-3 text-blue-600 rounded"
+                    />
+                    <span>与常住地一致</span>
+                  </label>
+                </div>
+                {!opponentDomicileSame && (
+                  <select
+                    value={opponentDomicile}
+                    onChange={(e) => {
+                      const newDom = e.target.value;
+                      onChange({ opponentDomicileRegionId: newDom });
+                    }}
+                    className="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-xl p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    {REGIONS.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        🏠 对方老家户籍：{r.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
             </div>
 
-            {/* 涉及房产/工作地/事故地时的第3地点事实 */}
+            {/* 房产/事故第3地点事实 */}
             {['real_estate', 'labor', 'tort'].includes(input.category) && (
               <div className="sm:col-span-2 space-y-1 pt-1 border-t border-slate-200">
                 <label className="text-xs font-bold text-slate-800 flex items-center space-x-1">
                   <Home className="w-3.5 h-3.5 text-emerald-600" />
                   <span>
                     {input.category === 'real_estate'
-                      ? '涉及的争议房屋坐落在哪个省市？'
+                      ? '争议房屋坐落省市（专属管辖）：'
                       : input.category === 'labor'
-                      ? '你的实际工作办公地点在哪个省市？'
-                      : '车祸 / 侵权事故发生地在哪个省市？'}
+                      ? '实际工作办公地点省市：'
+                      : '车祸 / 侵权事故发生省市：'}
                   </span>
                 </label>
                 <select
-                  value={input.incidentRegionId || input.clientRegionId || 'bj'}
+                  value={incidentRegionId}
                   onChange={(e) => {
                     const newIncident = e.target.value;
                     onChange({ incidentRegionId: newIncident });
                   }}
-                  className="w-full bg-white border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  className="w-full bg-white border border-slate-300 text-slate-800 text-xs rounded-xl p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
                   {REGIONS.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -1230,116 +1435,85 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             )}
           </div>
 
-          {/* 系统自动测算的法定管辖路线与建议 */}
+          {/* 智能多地管辖全景与价格比价卡片 */}
           <div className="space-y-2.5 pt-1">
-            <div className="flex items-center space-x-1.5 text-xs text-slate-600 font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              <span>系统智能测算出的起诉方案（点击切换，查看不同法院的费用与执行差异）：</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-1.5 text-xs text-slate-700 font-bold">
+                <Scale className="w-4 h-4 text-indigo-600" />
+                <span>依法可起诉的法院全景对比（胜诉率全国一致，不同城市律师费与查封优势不同）：</span>
+              </div>
+              <span className="text-[11px] text-blue-600 font-bold hidden sm:inline">
+                👇 点击选择起诉城市
+              </span>
             </div>
 
-            {isSameCity ? (
-              /* 同城情况 */
-              <div className="p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl text-xs space-y-1 text-emerald-950">
-                <div className="flex items-center space-x-1.5 font-black text-sm text-emerald-900">
-                  <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
-                  <span>双方均在【{clientRegion.name}】· 依法由本地法院专属管辖</span>
-                </div>
-                <p className="text-[11px] text-emerald-800 leading-relaxed">
-                  属于同城纠纷，主场维权无需异地奔波，<strong>差旅费为 ¥0 元</strong>！本地立案、取证与财产查封最为便捷。
-                </p>
-              </div>
-            ) : (
-              /* 跨省异地情况：系统智能推荐 2 大法定起诉路线 */
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* 路线 A：在你家门口起诉 */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectRoute('client_place')}
-                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative space-y-2 flex flex-col justify-between ${
-                    input.chosenRoute !== 'opponent_place'
-                      ? 'border-blue-600 bg-blue-50/90 ring-2 ring-blue-500/20 text-blue-950 shadow-xs font-semibold'
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-                  }`}
-                >
-                  {input.chosenRoute !== 'opponent_place' && (
-                    <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    </span>
-                  )}
-                  <div>
-                    <div className="flex items-center space-x-1.5">
-                      <span className="text-xs sm:text-sm font-black text-slate-900">
-                        方案一：在【你的所在地（{clientRegion.shortName}）】起诉
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {uniqueVenues.map((v) => {
+                const isSelected = selectedVenueKey === v.key || input.regionId === v.regionId;
+                return (
+                  <button
+                    key={v.key}
+                    type="button"
+                    onClick={() => handleSelectVenue(v)}
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col justify-between space-y-3 ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-50/90 ring-2 ring-blue-500/20 text-blue-950 shadow-sm font-semibold'
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    {isSelected && (
+                      <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
                       </span>
-                    </div>
-                    <div className="mt-1">
-                      <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-100 text-emerald-800">
-                        ⭐ 首选推荐 · 主场零奔波
-                      </span>
-                    </div>
-                  </div>
+                    )}
 
-                  <div className="text-[11px] bg-white/80 p-2 rounded-xl border border-slate-200/80 space-y-1 text-slate-600">
+                    {/* 头部：城市 + 法院类别 */}
                     <div>
-                      <span className="font-bold text-slate-800">🏃 要不要去：</span>
-                      <span>在家门口办案，核验材料立案最轻松</span>
+                      <div className="flex items-center space-x-1.5 pr-6">
+                        <span className="text-sm font-black text-slate-900">
+                          {v.regionName}法院
+                        </span>
+                        <span className="text-[11px] text-slate-500">（{v.venueTypeLabel}）</span>
+                      </div>
+                      <div className="mt-1">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-md font-black ${v.advantageTagColor}`}>
+                          {v.advantageTag}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-bold text-slate-800">💰 差旅开销：</span>
-                      <span className="text-emerald-600 font-bold">零差旅住宿费</span>
-                    </div>
-                    <div>
-                      <span className="font-bold text-slate-800">📜 法律依据：</span>
-                      <span>出借人/守约方所在地为合同履行地，依法可在家门口起诉</span>
-                    </div>
-                  </div>
-                </button>
 
-                {/* 路线 B：在对方老家起诉 */}
-                <button
-                  type="button"
-                  onClick={() => handleSelectRoute('opponent_place')}
-                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer relative space-y-2 flex flex-col justify-between ${
-                    input.chosenRoute === 'opponent_place'
-                      ? 'border-blue-600 bg-blue-50/90 ring-2 ring-blue-500/20 text-blue-950 shadow-xs font-semibold'
-                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-                  }`}
-                >
-                  {input.chosenRoute === 'opponent_place' && (
-                    <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    </span>
-                  )}
-                  <div>
-                    <div className="flex items-center space-x-1.5">
-                      <span className="text-xs sm:text-sm font-black text-slate-900">
-                        方案二：在【对方所在地（{opponentRegion.shortName}）】起诉
-                      </span>
+                    {/* 律师费价格与省钱比价 */}
+                    <div className="p-2.5 bg-white/90 rounded-xl border border-slate-200/80 space-y-1 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500 text-[11px]">当地律师参考价：</span>
+                        <span className="font-black text-slate-900">
+                          ¥{v.lawyerFeeMedian.toLocaleString()}
+                        </span>
+                      </div>
+                      {v.feeDifferenceVsHome < 0 && (
+                        <div className="flex items-center space-x-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">
+                          <TrendingDown className="w-3 h-3" />
+                          <span>比北京/一线家门口立省约 ¥{Math.abs(v.feeDifferenceVsHome).toLocaleString()} 律师费！</span>
+                        </div>
+                      )}
+                      <div className="text-[10px] text-slate-500 pt-0.5">
+                        ⚖️ 胜诉确定性：<strong>全国统一 95%</strong>（不受城市影响）
+                      </div>
                     </div>
-                    <div className="mt-1">
-                      <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-blue-100 text-blue-800">
-                        🎯 查封极速 · 老家执行力强
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="text-[11px] bg-white/80 p-2 rounded-xl border border-slate-200/80 space-y-1 text-slate-600">
-                    <div>
-                      <span className="font-bold text-blue-900">⚡ 核心优势：</span>
-                      <span>当地法院下楼直接查封对方在老家的房车与银行卡，回款更快</span>
+                    {/* 核心优势 */}
+                    <div className="text-[11px] text-slate-600 leading-relaxed">
+                      <div><strong>🎯 优势：</strong>{v.practicalPro}</div>
+                      {!v.isHome && (
+                        <div className="text-emerald-700 font-bold text-[10px] mt-0.5">
+                          ✨ 平台直配当地律师 · 差旅费 ¥0 元
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <span className="font-bold text-emerald-800">✨ 平台特权：</span>
-                      <span className="text-emerald-700 font-bold">直配当地律师 · 差旅费 ¥0 元（省约 ¥7500）</span>
-                    </div>
-                    <div>
-                      <span className="font-bold text-slate-800">📜 法律依据：</span>
-                      <span>《民诉法》第22条被告住所地标准管辖</span>
-                    </div>
-                  </div>
-                </button>
-              </div>
-            )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
