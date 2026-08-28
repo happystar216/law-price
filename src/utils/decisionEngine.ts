@@ -57,7 +57,8 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     claimAmount,
     input.isPropertyCase,
     input.stage,
-    input.feeMode
+    input.feeMode,
+    input.lawyerTier || 'senior'
   );
 
   let canTransferLawyerFee = false;

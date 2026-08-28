@@ -22,6 +22,11 @@ export type FeeMode =
   | 'half_risk' // 半风险代理（基础费+低比例提成）
   | 'hourly';   // 计时收费
 
+export type LawyerTier =
+  | 'economic'  // 经济实惠型 / 青年骨干（性价比高，适合简单标准案件）
+  | 'senior'    // 资深专案型 / 5~10年熟手律师（主流公道首选，稳健把控）
+  | 'elite';    // 头部红圈所 / 知名合伙人团队（疑难大案、千万标的首选）
+
 export type EvidenceLevel =
   | 'strong'   // 证据确凿充分
   | 'medium'   // 核心证据具备，但需补充质证
@@ -61,6 +66,7 @@ export interface CaseInputState {
   
   stage: LitigationStage;          // 诉讼程序阶段
   feeMode: FeeMode;                // 偏好计费方式
+  lawyerTier: LawyerTier;          // 律师档次偏好（经济实惠/资深成熟/红圈知名）
   evidenceLevel: EvidenceLevel;    // 证据完备度
   solvencyLevel: SolvencyLevel;    // 对方偿债能力与财产线索
   hasContractFeeClause: boolean;   // 合同是否明确约定败诉方承担律师费

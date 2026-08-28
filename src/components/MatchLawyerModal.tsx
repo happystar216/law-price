@@ -138,8 +138,8 @@ export const MatchLawyerModal: React.FC<MatchLawyerModalProps> = ({ analysis, on
                 <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-600 pt-0.5">
                   <div>· 案件纠纷：<strong>{category.name}</strong></div>
                   <div>· 涉及金额：<strong>¥{analysis.input.claimAmount.toLocaleString()} 元</strong></div>
-                  <div>· 预估胜诉率：<strong>{Math.round(analysis.roi.winProbability * 100)}%</strong></div>
-                  <div>· 预估花费：<strong>¥{analysis.financial.finalNetCostMin.toLocaleString()} 起</strong></div>
+                  <div>· 律师梯队：<strong>{analysis.input.lawyerTier === 'economic' ? '⚡ 经济实惠型' : analysis.input.lawyerTier === 'elite' ? '👑 红圈大所合伙人' : '⭐ 资深专案型'}</strong></div>
+                  <div>· 预估律师费：<strong>¥{analysis.financial.lawyerFeeMin.toLocaleString()} ~ {analysis.financial.lawyerFeeMax.toLocaleString()}</strong></div>
                 </div>
               </div>
 
