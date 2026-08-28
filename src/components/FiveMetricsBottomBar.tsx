@@ -45,9 +45,9 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
           </button>
         </div>
 
-        {/* 5 大核心结果卡片（彻底通俗化） */}
+        {/* 5 大核心结果卡片（彻底直观化） */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
-          {/* 1. 金钱花费（彻底搞懂：前期垫付 vs 打赢后实际花了多少） */}
+          {/* 1. 金钱花费（单一清晰总花费） */}
           <button
             type="button"
             onClick={() => onOpenMetric('financial')}
@@ -56,18 +56,24 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
             <div className="flex items-center justify-between text-[10px] text-amber-400 font-bold">
               <span className="flex items-center space-x-1">
                 <Coins className="w-3 h-3 text-amber-400" />
-                <span>① 要花多少钱</span>
+                <span>① 预计总花费</span>
               </span>
               <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-amber-300 transition-transform" />
             </div>
             <div className="text-xs sm:text-sm font-black text-white mt-1 tracking-tight">
-              前期先垫: ¥{financial.upfrontCostMin.toLocaleString()}
-              <span className="text-[10px] text-slate-400 font-normal ml-0.5">起</span>
+              {financial.canTransferLawyerFee ? (
+                <span className="text-emerald-400 font-black">¥0 (对方全掏)</span>
+              ) : (
+                <>
+                  约 ¥{financial.finalNetCostMin.toLocaleString()}
+                  <span className="text-[10px] text-slate-400 font-normal ml-0.5">~ {financial.finalNetCostMax.toLocaleString()}</span>
+                </>
+              )}
             </div>
-            <div className="text-[10px] text-emerald-400 truncate mt-0.5 font-medium">
+            <div className="text-[10px] text-slate-400 truncate mt-0.5 font-medium">
               {financial.canTransferLawyerFee
-                ? '✨ 打赢后对方全包 (净花¥0)'
-                : `打赢后实际花销: ¥${financial.finalNetCostMin.toLocaleString()}`}
+                ? '✨ 约定违约承担 · 对方买单'
+                : '诉讼费打赢退还 · 仅律师费'}
             </div>
           </button>
 
@@ -88,7 +94,7 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
               只需配合 ~{timeAndEffort.clientHoursWithLawyer} 小时
             </div>
             <div className="text-[10px] text-slate-400 truncate mt-0.5">
-              不用请假 (自己跑需耗{timeAndEffort.clientHoursSelf}h)
+              不用请假跑腿 (自己打需{timeAndEffort.clientHoursSelf}h)
             </div>
           </button>
 
@@ -130,7 +136,7 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
               胜诉率 {Math.round(roi.winProbability * 100)}%
             </div>
             <div className="text-[10px] text-slate-400 truncate mt-0.5">
-              执行回款率 {Math.round(roi.recoveryProbability * 100)}%
+              回款率 {Math.round(roi.recoveryProbability * 100)}%
             </div>
           </button>
 
