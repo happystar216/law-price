@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type {
   CaseCategory,
   CaseInputState,
   LitigationStage,
 } from '../types';
 import { REGIONS } from '../data/regions';
-import { Check } from 'lucide-react';
+import { Check, MapPin, Sparkles } from 'lucide-react';
 
 interface UserFriendlyConfiguratorProps {
   input: CaseInputState;
@@ -552,7 +552,7 @@ const FACT_MAP: Record<
   },
 };
 
-// 100% 用户视角的诉讼所处阶段（依据有没有去过法院、有没有判决书来客观判断）
+// 诉讼所处客观阶段
 const STAGE_FACT_OPTIONS: {
   id: LitigationStage;
   title: string;
@@ -583,6 +583,153 @@ const STAGE_FACT_OPTIONS: {
   },
 ];
 
+// 根据不同纠纷类型，提供针对性的法律管辖地选项（如：出借人地 vs 借款人地 / 工作地 vs 公司地 / 房屋所在地）
+interface JurisdictionOption {
+  id: string;
+  title: string;
+  subLabel: string;
+  isRecommended?: boolean;
+  legalReason: string;
+}
+
+const JURISDICTION_MAP: Record<CaseCategory, JurisdictionOption[]> = {
+  debt: [
+    {
+      id: 'creditor_place',
+      title: '在我所在的城市打（推荐 · 家门口起诉）',
+      subLabel: '你的户籍地 / 常住地 / 银行接收还款地',
+      isRecommended: true,
+      legalReason: '最高法《民间借贷司法解释》规定：接收货币一方（出借人）所在地为合同履行地，可直接在自己家门口法院起诉，省去异地奔波！',
+    },
+    {
+      id: 'debtor_place',
+      title: '在对方（借款人）所在的城市打',
+      subLabel: '欠债人的户籍地 / 经常居住地',
+      legalReason: '被告住所地法院管辖。如果对方名下的房产、车辆或主要开户行全在对方老家，在此地起诉查封财产更直接。',
+    },
+  ],
+  labor: [
+    {
+      id: 'work_place',
+      title: '在我的实际工作地城市打（推荐）',
+      subLabel: '你日常打卡上班的办公地点 / 劳动合同履行地',
+      isRecommended: true,
+      legalReason: '《劳动争议调解仲裁法》规定：劳动争议由劳动合同履行地或者用人单位所在地的劳动争议仲裁委员会管辖，实际工作地最方便。',
+    },
+    {
+      id: 'company_place',
+      title: '在公司营业执照注册地城市打',
+      subLabel: '公司总部 / 营业执照登记住所地',
+      legalReason: '若异地远程办公或工作地经常变动，可直接向公司工商注册地的仲裁委申请劳动仲裁。',
+    },
+  ],
+  contract: [
+    {
+      id: 'contract_perform_place',
+      title: '在我方城市 / 合同约定的送货收款地打（推荐）',
+      subLabel: '合同履行地 / 接收货款一方所在地',
+      isRecommended: true,
+      legalReason: '买卖合同如对方拖欠货款，守约方接收货币所在地可作为合同履行地管辖；若合同专门约定了管辖法院以约定为准。',
+    },
+    {
+      id: 'defendant_place',
+      title: '在对方企业注册地所在城市打',
+      subLabel: '被告公司住所地法院',
+      legalReason: '民事诉讼基本原则“原告就被告”，便于当地法院直接上门送达传票并冻结其对公基本户。',
+    },
+  ],
+  real_estate: [
+    {
+      id: 'property_place',
+      title: '在出租房屋 / 涉案房产所在城市打（法定首选）',
+      subLabel: '争议房屋 / 房产不动产坐落地',
+      isRecommended: true,
+      legalReason: '《民事诉讼法》规定因不动产纠纷提起的诉讼，由不动产所在地人民法院专属管辖，在该房产辖区法院立案最权威稳妥！',
+    },
+    {
+      id: 'landlord_place',
+      title: '在房东户籍地 / 中介公司总部城市打',
+      subLabel: '被告住所地（若仅为主张押金债权）',
+      legalReason: '若仅为主张金钱返还且房屋管辖存在争议时，也可在被告住所地法院提起诉讼。',
+    },
+  ],
+  tort: [
+    {
+      id: 'accident_place',
+      title: '在车祸 / 侵权事故发生地城市打（推荐）',
+      subLabel: '事故发生地交警辖区 / 侵权行为地',
+      isRecommended: true,
+      legalReason: '《民事诉讼法》第28条：因侵权行为提起的诉讼，由侵权行为地（事故地）人民法院管辖，便于调取交警卷宗与现场勘验。',
+    },
+    {
+      id: 'tortfeasor_place',
+      title: '在肇事者 / 被告户籍或常住城市打',
+      subLabel: '被告住所地法院',
+      legalReason: '可在被告住所地法院起诉，若对方在当地有固定房产，便于判决生效后就地申请强制执行。',
+    },
+  ],
+  marriage: [
+    {
+      id: 'spouse_place',
+      title: '在配偶（对方）户籍地或常住城市打（法定原则）',
+      subLabel: '被告经常居住地（连续居住满1年）',
+      isRecommended: true,
+      legalReason: '对公民提起的民事诉讼由被告住所地管辖；若对方离开原籍连续居住满一年，可在其经常居住地法院起诉。',
+    },
+    {
+      id: 'estate_place',
+      title: '在主要房产 / 被继承人遗产所在地打',
+      subLabel: '共同房产所在地 / 遗产主要存放地',
+      legalReason: '遗产继承纠纷由被继承人死亡时住所地或主要遗产所在地法院专属管辖。',
+    },
+  ],
+  ip: [
+    {
+      id: 'ip_infringement_place',
+      title: '在侵权发生地 / 对方网店公司所在地打',
+      subLabel: '侵权行为实施地 / 侵权网店经营主体所在地',
+      isRecommended: true,
+      legalReason: '知识产权侵权可在侵权行为实施地、侵权复制品储藏地或被告住所地法院管辖。',
+    },
+    {
+      id: 'ip_plaintiff_place',
+      title: '在我方住所地城市打（网络侵权）',
+      subLabel: '被侵权人（你）的经常居住地',
+      legalReason: '信息网络传播权侵权纠纷中，被侵权人发现侵权内容的计算机终端等设备所在地也可作为管辖连接点。',
+    },
+  ],
+  company: [
+    {
+      id: 'company_reg_place',
+      title: '在公司工商登记注册地所在城市打（法定管辖）',
+      subLabel: '涉案公司住所地法院',
+      isRecommended: true,
+      legalReason: '《民事诉讼法》第26条：因公司设立、确认股东资格、分配利润、解散等纠纷，由公司住所地人民法院管辖。',
+    },
+    {
+      id: 'shareholder_place',
+      title: '在主要财产所在地 / 股东户籍地打',
+      subLabel: '合同履行地或被告股东所在地',
+      legalReason: '股权转让合同纠纷等债权类争议，也可按合同履行地或被告所在地确定管辖。',
+    },
+  ],
+  other: [
+    {
+      id: 'plaintiff_place',
+      title: '在我方所在地 / 合同履行地城市打（推荐）',
+      subLabel: '原告住所地或约定履行地',
+      isRecommended: true,
+      legalReason: '依据民诉法相关履行地规定，就近在维权成本较低的辖区法院起诉。',
+    },
+    {
+      id: 'defendant_place',
+      title: '在对方住所地 / 公司注册地所在城市打',
+      subLabel: '被告住所地法院',
+      legalReason: '标准被告住所地管辖，便于直接查控冻结对方名下资产。',
+    },
+  ],
+};
+
 export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> = ({
   input,
   onChange,
@@ -590,7 +737,15 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
   const currentClaimConfig = CLAIM_CONFIG_MAP[input.category] || CLAIM_CONFIG_MAP.debt;
   const currentEvidenceOptions = EVIDENCE_MAP[input.category] || EVIDENCE_MAP.debt;
   const currentFactOptions = FACT_MAP[input.category] || FACT_MAP.debt;
+  const currentJurisdictionOptions = JURISDICTION_MAP[input.category] || JURISDICTION_MAP.debt;
   const currentCategory = USER_FRIENDLY_SCENARIOS.find((s) => s.id === input.category) || USER_FRIENDLY_SCENARIOS[0];
+
+  // 记录选中的管辖连接点（如出借人地 vs 借款人地）
+  const [selectedJurisdictionId, setSelectedJurisdictionId] = useState<string>(
+    currentJurisdictionOptions[0]?.id || 'default'
+  );
+
+  const activeJurisdiction = currentJurisdictionOptions.find((j) => j.id === selectedJurisdictionId) || currentJurisdictionOptions[0];
 
   return (
     <div className="space-y-4">
@@ -618,7 +773,9 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                 onClick={() => {
                   const newCategory = sc.id;
                   const newConfig = CLAIM_CONFIG_MAP[newCategory];
+                  const newJurisdictions = JURISDICTION_MAP[newCategory] || JURISDICTION_MAP.debt;
                   const defaultAmount = newConfig.quickAmounts[2]?.val || 100000;
+                  setSelectedJurisdictionId(newJurisdictions[0]?.id || 'default');
                   onChange({
                     category: newCategory,
                     claimAmount: input.isPropertyCase ? defaultAmount : 0,
@@ -860,7 +1017,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 4：让用户判断【已知客观事实线索】，而不是猜测抽象结论 */}
+      {/* 问题 4：让用户判断【已知客观事实线索】 */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -877,7 +1034,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-          {/* 事实 1: 掌握明确线索 / 正常营业发薪 */}
+          {/* 事实 1 */}
           <button
             type="button"
             onClick={() => onChange({ solvencyLevel: 'high' })}
@@ -905,7 +1062,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             </p>
           </button>
 
-          {/* 事实 2: 知晓基本身份，具体资产需法院系统排查 */}
+          {/* 事实 2 */}
           <button
             type="button"
             onClick={() => onChange({ solvencyLevel: 'medium' })}
@@ -933,7 +1090,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             </p>
           </button>
 
-          {/* 事实 3: 失联/负债过多/已被多人起诉 */}
+          {/* 事实 3 */}
           <button
             type="button"
             onClick={() => onChange({ solvencyLevel: 'low' })}
@@ -963,76 +1120,131 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 5：事情进展到哪个真实阶段？（完全依据是否去过法院或有无判决书，无需判断案情清不清楚） */}
-      <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
-        <div className="flex items-center justify-between">
+      {/* 问题 5：客观阶段 + 案件定制法定管辖城市 */}
+      <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-4">
+        {/* 5.1 诉讼阶段 */}
+        <div className="space-y-3">
           <div className="flex items-center space-x-2">
             <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
               5
             </span>
             <div>
               <h3 className="font-bold text-sm sm:text-base text-slate-900">
-                事情目前进展到哪一步？ & 去哪个省打官司？
+                事情目前进展到哪个阶段？
               </h3>
               <p className="text-[11px] text-slate-500">依据你是否已经去过法院或是否已有判决书来勾选</p>
             </div>
           </div>
-        </div>
 
-        {/* 3 大直观事实阶段卡片 */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-          {STAGE_FACT_OPTIONS.map((st) => {
-            const isSelected = input.stage === st.id;
-            return (
-              <button
-                key={st.id}
-                type="button"
-                onClick={() => onChange({ stage: st.id })}
-                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between ${
-                  isSelected
-                    ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-                }`}
-              >
-                {isSelected && (
-                  <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </span>
-                )}
-                <div>
-                  <div className="font-bold text-xs sm:text-sm pr-4 text-slate-900">
-                    {st.title}
-                  </div>
-                  <div className="mt-1">
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${st.tagColor}`}>
-                      {st.tag}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            {STAGE_FACT_OPTIONS.map((st) => {
+              const isSelected = input.stage === st.id;
+              return (
+                <button
+                  key={st.id}
+                  type="button"
+                  onClick={() => onChange({ stage: st.id })}
+                  className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  {isSelected && (
+                    <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </span>
+                  )}
+                  <div>
+                    <div className="font-bold text-xs sm:text-sm pr-4 text-slate-900">
+                      {st.title}
+                    </div>
+                    <div className="mt-1">
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${st.tagColor}`}>
+                        {st.tag}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
-                  {st.desc}
-                </p>
-              </button>
-            );
-          })}
+                  <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                    {st.desc}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* 管辖省份选择 */}
-        <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <label className="text-xs font-semibold text-slate-700">
-            去哪个省市打官司？（通常是被告所在城市或合同签定地）
-          </label>
-          <select
-            value={input.regionId}
-            onChange={(e) => onChange({ regionId: e.target.value })}
-            className="bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-xs"
-          >
-            {REGIONS.map((r) => (
-              <option key={r.id} value={r.id}>
-                📍 {r.name}
-              </option>
-            ))}
-          </select>
+        {/* 5.2 案件定制的管辖城市连接点选择（根据借贷/劳动/买卖等法律规则可在家门口或对方城市打） */}
+        <div className="pt-4 border-t border-slate-100 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-1.5">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              <h4 className="font-bold text-xs sm:text-sm text-slate-900">
+                你想去哪个城市打官司？（根据【{currentCategory.title}】法律规则，有以下可选城市）
+              </h4>
+            </div>
+            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold hidden sm:inline">
+              依法支持多地管辖选择
+            </span>
+          </div>
+
+          {/* 管辖连接点双选卡片 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {currentJurisdictionOptions.map((j) => {
+              const isSelected = selectedJurisdictionId === j.id;
+              return (
+                <button
+                  key={j.id}
+                  type="button"
+                  onClick={() => setSelectedJurisdictionId(j.id)}
+                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative ${
+                    isSelected
+                      ? 'border-blue-600 bg-blue-50/80 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  {isSelected && (
+                    <span className="absolute top-2.5 right-2.5 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </span>
+                  )}
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-xs sm:text-sm font-bold text-slate-900">{j.title}</span>
+                  </div>
+                  <div className="text-[11px] text-blue-700 font-medium mt-0.5">
+                    📍 {j.subLabel}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 法律管辖科普提示 */}
+          <div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200/60 text-xs flex items-start space-x-2 text-slate-700">
+            <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+            <div className="text-[11px] leading-relaxed">
+              <span className="font-bold text-blue-900">管辖依据：</span>
+              <span>{activeJurisdiction.legalReason}</span>
+            </div>
+          </div>
+
+          {/* 具体省市选择器 */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+            <label className="text-xs font-semibold text-slate-700">
+              请选择该地点所在的具体省市（适用当地法院审理与律协参考标准）：
+            </label>
+            <select
+              value={input.regionId}
+              onChange={(e) => onChange({ regionId: e.target.value })}
+              className="bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-xs"
+            >
+              {REGIONS.map((r) => (
+                <option key={r.id} value={r.id}>
+                  📍 {r.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </section>
 
