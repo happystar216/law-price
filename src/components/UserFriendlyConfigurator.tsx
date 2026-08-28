@@ -3,7 +3,6 @@ import type {
   CaseCategory,
   CaseInputState,
   LitigationStage,
-  SolvencyLevel,
 } from '../types';
 import { REGIONS } from '../data/regions';
 import { Check } from 'lucide-react';
@@ -113,7 +112,7 @@ const CLAIM_CONFIG_MAP: Record<CaseCategory, ClaimConfig> = {
       { label: '5万', val: 50000 },
       { label: '8万', val: 80000 },
       { label: '12万', val: 120000 },
-      { label: '20万', val: 20000 },
+      { label: '20万', val: 200000 },
       { label: '35万', val: 350000 },
       { label: '50万+', val: 500000 },
     ],
@@ -389,12 +388,177 @@ const EVIDENCE_MAP: Record<
   },
 };
 
+// 根据不同纠纷类型，让用户选择已知的【客观事实线索】而不是主观判断经济好坏
+const FACT_MAP: Record<
+  CaseCategory,
+  {
+    high: { fact: string; detail: string; tag: string };
+    medium: { fact: string; detail: string; tag: string };
+    low: { fact: string; detail: string; tag: string };
+  }
+> = {
+  debt: {
+    high: {
+      fact: '知道对方有房/有车/或有正经发薪单位',
+      detail: '名下有明确的不动产、车辆线索或在机关事业单位/大型企业正常上班',
+      tag: '有明确财产线索',
+    },
+    medium: {
+      fact: '人能联系上，但具体存款房产底细不详',
+      detail: '对方在正常生活工作，需起诉后由法院联网排查其银行卡与微信零钱',
+      tag: '需法院联网查控',
+    },
+    low: {
+      fact: '微信不回/人已失联，听说在外面欠很多人钱',
+      detail: '对方四处躲债、可能已被多家法院限高，名下可能无可供执行的财产',
+      tag: '警惕老赖执行难',
+    },
+  },
+  labor: {
+    high: {
+      fact: '公司规模较大、正常开门营业中',
+      detail: '公司有正规办公场地、员工正常出勤、账户有日常经营流水进出',
+      tag: '企业正常运转',
+    },
+    medium: {
+      fact: '小微公司/初创团队，但仍在存续运营',
+      detail: '公司还在继续经营，但账上具体有多少可用现金需要劳动仲裁后查扣',
+      tag: '存续小微企业',
+    },
+    low: {
+      fact: '公司已搬空办公场地 / 老板失联失信',
+      detail: '公司面临关门解散、老板不接电话、甚至已被列入失信被执行人名单',
+      tag: '公司面临破产/失联',
+    },
+  },
+  contract: {
+    high: {
+      fact: '对方企业正常纳税开票，有厂房/库房或实体店铺',
+      detail: '属于正规存续实体企业，有固定资产或稳定的上下游结算回款',
+      tag: '有经营实体',
+    },
+    medium: {
+      fact: '企业仍在存续，但不清楚其负债与资金链情况',
+      detail: '仍在正常开展业务，需尽早向法院申请财产保全，提前冻结其对公账户',
+      tag: '建议申请诉讼保全',
+    },
+    low: {
+      fact: '空壳公司 / 经营异常 / 实际控制人已跑路',
+      detail: '名下查不到实质资产，存在多起官司未履行，可能需要追加股东为被告',
+      tag: '空壳或经营异常',
+    },
+  },
+  real_estate: {
+    high: {
+      fact: '房东就是本市房产所有人 / 或全国连锁品牌中介',
+      detail: '房东在本地有名下房产不动产，中介为大型合规连锁机构，不会跑路',
+      tag: '有本地房产背书',
+    },
+    medium: {
+      fact: '是二房东转租 / 或个人房东底细不清楚',
+      detail: '人能正常沟通，但不清楚其名下具体财产情况，需法院下发文书执行',
+      tag: '个人财产底细未知',
+    },
+    low: {
+      fact: '黑中介跑路 / 二房东微信拉黑失联',
+      detail: '门店已经关停搬空，二房东失联不退押金，可能需追查原房东及收款人',
+      tag: '失联跑路风险',
+    },
+  },
+  tort: {
+    high: {
+      fact: '对方车辆买了足额交强险和商业三者险(100万+)',
+      detail: '事故属于保险赔偿范围，由保险公司在限额内先行赔付，理赔有保障',
+      tag: '商业保险全额覆盖',
+    },
+    medium: {
+      fact: '仅买了交强险(20万限额) / 或由个人直接赔偿',
+      detail: '超出交强险部分需对方自掏腰包，对方有正常工作收入可供执行',
+      tag: '部分需个人承担',
+    },
+    low: {
+      fact: '肇事逃逸 / 无牌无证无保险且个人无赔偿能力',
+      detail: '对方无保险且个人经济极度拮据，需申请道路交通事故社会救助基金',
+      tag: '无保险且赔偿能力弱',
+    },
+  },
+  marriage: {
+    high: {
+      fact: '房产证在手 / 掌握对方具体的银行卡开户行与车牌',
+      detail: '共同财产线索极其明确，立案后可立即向法院申请财产查封，防止转移',
+      tag: '掌握核心财产线索',
+    },
+    medium: {
+      fact: '知道对方有收入或房产，但具体存款账号不详',
+      detail: '需要委托律师向法院申请开具「律师调查令」，调取银行流水与房产档案',
+      tag: '需申请律师调查令',
+    },
+    low: {
+      fact: '对方已提前恶意转移/隐匿财产，名下查不到余额',
+      detail: '对方有明显转移资产迹象，需通过银行流水倒查大额转账并主张撤销',
+      tag: '存在恶意隐匿转移',
+    },
+  },
+  ip: {
+    high: {
+      fact: '侵权方是有知名度的成熟企业或大型网店/大平台',
+      detail: '侵权主体资金实力雄厚、重视企业信用，判决生效后通常会主动全额履行',
+      tag: '知名企业/大平台',
+    },
+    medium: {
+      fact: '侵权方是普通个人网店 / 中小自媒体账号',
+      detail: '店铺仍在正常经营出单，需申请诉讼保全冻结其平台保证金与提现账户',
+      tag: '正常运营小微主体',
+    },
+    low: {
+      fact: '匿名侵权主体 / 随时注销下架跑路的小作坊',
+      detail: '工商信息难以核实或早已被列入异常名录，需向平台调取真实实名信息',
+      tag: '主体隐蔽不易执行',
+    },
+  },
+  company: {
+    high: {
+      fact: '公司资产充裕，有对公账户与正常业务进出',
+      detail: '公司有实际办公地、员工与纳税记录，执行回款较为可靠',
+      tag: '有实际资产运营',
+    },
+    medium: {
+      fact: '公司运营一般，需通过查账审计核实财务底细',
+      detail: '需律师介入申请查账或诉讼保全，查清公司真实应收账款与资产',
+      tag: '需调取财务账册',
+    },
+    low: {
+      fact: '公司已被掏空或严重资不抵债，股东有抽逃出资嫌疑',
+      detail: '公司名下已无资金，需重点通过诉讼穿透法人人格，追究股东连带责任',
+      tag: '涉嫌抽逃/资不抵债',
+    },
+  },
+  other: {
+    high: {
+      fact: '能提供明确的对方财产线索（房产/车辆/稳定工作单位）',
+      detail: '对方在本地有固定住所或稳定职业收入，判决后具备明确的执行对象',
+      tag: '有明确财产线索',
+    },
+    medium: {
+      fact: '人能正常联系，但名下具体资产需要法院联网查控',
+      detail: '对方在正常生活，立案后由法院执行系统统一查控全国各大银行与微信账户',
+      tag: '需法院联网查控',
+    },
+    low: {
+      fact: '对方失联失信 / 已有多起涉诉且名下无资产',
+      detail: '对方负债累累或故意躲避债务，执行存在一定不确定性风险',
+      tag: '老赖失联高风险',
+    },
+  },
+};
+
 export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> = ({
   input,
   onChange,
 }) => {
   const currentClaimConfig = CLAIM_CONFIG_MAP[input.category] || CLAIM_CONFIG_MAP.debt;
   const currentEvidenceOptions = EVIDENCE_MAP[input.category] || EVIDENCE_MAP.debt;
+  const currentFactOptions = FACT_MAP[input.category] || FACT_MAP.debt;
   const currentCategory = USER_FRIENDLY_SCENARIOS.find((s) => s.id === input.category) || USER_FRIENDLY_SCENARIOS[0];
 
   return (
@@ -423,7 +587,6 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                 onClick={() => {
                   const newCategory = sc.id;
                   const newConfig = CLAIM_CONFIG_MAP[newCategory];
-                  // If category changed, adjust default claim amount if previous was out of range
                   const defaultAmount = newConfig.quickAmounts[2]?.val || 100000;
                   onChange({
                     category: newCategory,
@@ -467,7 +630,6 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
             </div>
           </div>
 
-          {/* 针对离婚/家事等支持纯非财产诉求的切换 */}
           {currentClaimConfig.hasNonPropertyOption && (
             <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs font-medium self-start sm:self-auto shrink-0">
               <button
@@ -564,7 +726,7 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         )}
       </section>
 
-      {/* 问题 3：手头保存了哪些材料？（已根据上方的纠纷类型动态精准匹配！） */}
+      {/* 问题 3：手头保存了哪些材料？ */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -667,70 +829,106 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 4：对方现在的经济状况怎么样？ */}
+      {/* 问题 4：让用户判断【已知客观事实线索】，而不是猜测抽象结论 */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
               4
             </span>
-            <h3 className="font-bold text-sm sm:text-base text-slate-900">
-              对方目前的经济状况怎么样？（打赢后能否拿到现钱）
-            </h3>
+            <div>
+              <h3 className="font-bold text-sm sm:text-base text-slate-900">
+                关于对方的财产与现状，你掌握哪些具体事实？
+              </h3>
+              <p className="text-[11px] text-slate-500">只需勾选已知事实，系统会自动为您评估打赢后能否顺利拿到钱</p>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          {[
-            {
-              id: 'high',
-              title: '对方有资产有钱',
-              desc: '名下有房产、汽车、正常领工资或公司正常开着',
-              tag: '回款有保障',
-              tagColor: 'bg-emerald-100 text-emerald-800',
-            },
-            {
-              id: 'medium',
-              title: '一般 / 不太清楚',
-              desc: '在正常上班或做小买卖，需要法院查封银行卡与微信',
-              tag: '需法院查控',
-              tagColor: 'bg-blue-100 text-blue-800',
-            },
-            {
-              id: 'low',
-              title: '对方是老赖 / 跑路了',
-              desc: '欠债累累、名下查不到房车、人也找不到（执行风险大）',
-              tag: '执行不能风险高',
-              tagColor: 'bg-rose-100 text-rose-800',
-            },
-          ].map((sol) => {
-            const isSelected = input.solvencyLevel === sol.id;
-            return (
-              <button
-                key={sol.id}
-                type="button"
-                onClick={() => onChange({ solvencyLevel: sol.id as SolvencyLevel })}
-                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
-                  isSelected
-                    ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-500/20 text-indigo-950 font-semibold shadow-xs'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
-                }`}
-              >
-                {isSelected && (
-                  <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </span>
-                )}
-                <div className="font-bold text-xs sm:text-sm">{sol.title}</div>
-                <div className="mt-1">
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${sol.tagColor}`}>
-                    {sol.tag}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">{sol.desc}</p>
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+          {/* 事实 1: 掌握明确线索 / 正常营业发薪 */}
+          <button
+            type="button"
+            onClick={() => onChange({ solvencyLevel: 'high' })}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+              input.solvencyLevel === 'high'
+                ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-500/20 text-emerald-950 font-semibold shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            {input.solvencyLevel === 'high' && (
+              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+            )}
+            <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+              {currentFactOptions.high.fact}
+            </div>
+            <div className="mt-1">
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-emerald-100 text-emerald-800">
+                {currentFactOptions.high.tag} (回款率 ~90%)
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              {currentFactOptions.high.detail}
+            </p>
+          </button>
+
+          {/* 事实 2: 知晓基本身份，具体资产需法院系统排查 */}
+          <button
+            type="button"
+            onClick={() => onChange({ solvencyLevel: 'medium' })}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+              input.solvencyLevel === 'medium'
+                ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            {input.solvencyLevel === 'medium' && (
+              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+            )}
+            <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+              {currentFactOptions.medium.fact}
+            </div>
+            <div className="mt-1">
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-blue-100 text-blue-800">
+                {currentFactOptions.medium.tag} (回款率 ~60%)
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              {currentFactOptions.medium.detail}
+            </p>
+          </button>
+
+          {/* 事实 3: 失联/负债过多/已被多人起诉 */}
+          <button
+            type="button"
+            onClick={() => onChange({ solvencyLevel: 'low' })}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer relative ${
+              input.solvencyLevel === 'low'
+                ? 'border-rose-600 bg-rose-50/70 ring-2 ring-rose-500/20 text-rose-950 font-semibold shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            {input.solvencyLevel === 'low' && (
+              <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 stroke-[3]" />
+              </span>
+            )}
+            <div className="font-bold text-xs sm:text-sm text-slate-900 pr-4">
+              {currentFactOptions.low.fact}
+            </div>
+            <div className="mt-1">
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-bold bg-rose-100 text-rose-800">
+                {currentFactOptions.low.tag}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+              {currentFactOptions.low.detail}
+            </p>
+          </button>
         </div>
       </section>
 
