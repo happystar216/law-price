@@ -1,17 +1,12 @@
 import React from 'react';
 import { Scale, PhoneCall, HelpCircle } from 'lucide-react';
-import { REGIONS } from '../data/regions';
 
 interface HeaderProps {
-  currentRegionId: string;
-  onRegionChange: (id: string) => void;
   onOpenMatchLawyer: () => void;
   onScrollToFaq: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  currentRegionId,
-  onRegionChange,
   onOpenMatchLawyer,
   onScrollToFaq,
 }) => {
@@ -33,26 +28,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Controls: Region & Match Lawyer */}
+          {/* Controls: FAQ & Match Lawyer */}
           <div className="flex items-center space-x-3">
-            <div className="relative">
-              <select
-                value={currentRegionId}
-                onChange={(e) => onRegionChange(e.target.value)}
-                className="appearance-none bg-slate-100 hover:bg-slate-200/80 text-slate-800 text-xs sm:text-sm font-medium py-1.5 pl-3 pr-8 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-colors"
-                aria-label="选择管辖地区"
-              >
-                {REGIONS.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    📍 {r.shortName}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500 text-xs">
-                ▼
-              </div>
-            </div>
-
             <button
               onClick={onScrollToFaq}
               className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"

@@ -51,8 +51,6 @@ export function App() {
     <div className="min-h-screen bg-slate-100/80 flex flex-col selection:bg-blue-500 selection:text-white pb-36 sm:pb-32">
       {/* Top Header */}
       <Header
-        currentRegionId={caseInput.regionId}
-        onRegionChange={(id) => handleInputChange({ regionId: id })}
         onOpenMatchLawyer={() => setShowMatchLawyerModal(true)}
         onScrollToFaq={scrollToFaq}
       />
