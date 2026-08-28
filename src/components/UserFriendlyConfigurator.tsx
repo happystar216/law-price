@@ -70,6 +70,188 @@ const USER_FRIENDLY_SCENARIOS: {
   },
 ];
 
+// 根据不同纠纷类型，定制专属的金额问法、说明与常用金额快捷标签
+interface ClaimConfig {
+  title: string;
+  subtitle: string;
+  unit: string;
+  hasNonPropertyOption?: boolean;
+  nonPropertyLabel?: string;
+  propertyLabel?: string;
+  quickAmounts: { label: string; val: number }[];
+  sliderMin: number;
+  sliderMax: number;
+  sliderStep: number;
+}
+
+const CLAIM_CONFIG_MAP: Record<CaseCategory, ClaimConfig> = {
+  debt: {
+    title: '对方一共欠你多少借款没还？',
+    subtitle: '包含借款本金、利息与逾期违约利息',
+    unit: '元',
+    quickAmounts: [
+      { label: '2万以内', val: 20000 },
+      { label: '5万', val: 50000 },
+      { label: '10万', val: 100000 },
+      { label: '30万', val: 300000 },
+      { label: '50万', val: 500000 },
+      { label: '100万', val: 1000000 },
+      { label: '300万', val: 3000000 },
+      { label: '500万+', val: 5000000 },
+    ],
+    sliderMin: 5000,
+    sliderMax: 5000000,
+    sliderStep: 5000,
+  },
+  labor: {
+    title: '主张公司赔偿 / 补发多少钱？',
+    subtitle: '包含拖欠工资、未签合同双倍工资、违法辞退赔偿金(2N/N+1)、未休年假及加班费',
+    unit: '元',
+    quickAmounts: [
+      { label: '1万', val: 10000 },
+      { label: '3万', val: 30000 },
+      { label: '5万', val: 50000 },
+      { label: '8万', val: 80000 },
+      { label: '12万', val: 120000 },
+      { label: '20万', val: 20000 },
+      { label: '35万', val: 350000 },
+      { label: '50万+', val: 500000 },
+    ],
+    sliderMin: 2000,
+    sliderMax: 1000000,
+    sliderStep: 2000,
+  },
+  contract: {
+    title: '对方拖欠的货款 / 违约损失金额是多少？',
+    subtitle: '包含未付货款、工程款、定金、违约金及直接经济损失',
+    unit: '元',
+    quickAmounts: [
+      { label: '5万', val: 50000 },
+      { label: '10万', val: 100000 },
+      { label: '30万', val: 300000 },
+      { label: '50万', val: 500000 },
+      { label: '100万', val: 1000000 },
+      { label: '200万', val: 2000000 },
+      { label: '500万', val: 5000000 },
+      { label: '1000万+', val: 10000000 },
+    ],
+    sliderMin: 10000,
+    sliderMax: 10000000,
+    sliderStep: 10000,
+  },
+  real_estate: {
+    title: '涉及的押金 / 房屋纠纷金额是多少？',
+    subtitle: '包含被扣租房押金、中介费、二手房买卖违约定金或房屋维修损失',
+    unit: '元',
+    quickAmounts: [
+      { label: '3000元', val: 3000 },
+      { label: '5000元', val: 5000 },
+      { label: '1万', val: 10000 },
+      { label: '2万', val: 20000 },
+      { label: '5万', val: 50000 },
+      { label: '10万', val: 100000 },
+      { label: '30万', val: 300000 },
+      { label: '100万+', val: 1000000 },
+    ],
+    sliderMin: 1000,
+    sliderMax: 3000000,
+    sliderStep: 1000,
+  },
+  tort: {
+    title: '你要求赔偿的人身损害 / 车祸赔偿总额？',
+    subtitle: '包含医疗费、后续治疗费、误工费、护理费、伤残赔偿金及车辆维修损失',
+    unit: '元',
+    quickAmounts: [
+      { label: '2万', val: 20000 },
+      { label: '5万', val: 50000 },
+      { label: '10万', val: 100000 },
+      { label: '20万', val: 200000 },
+      { label: '35万', val: 350000 },
+      { label: '50万', val: 500000 },
+      { label: '80万', val: 800000 },
+      { label: '150万+', val: 1500000 },
+    ],
+    sliderMin: 5000,
+    sliderMax: 3000000,
+    sliderStep: 5000,
+  },
+  marriage: {
+    title: '夫妻共同财产 / 争议遗产的总估值大约是多少？',
+    subtitle: '包含共同房产当前市价、车辆、存款、股票理财或老人遗产总额（法院按争议标的计算诉讼费）',
+    unit: '元',
+    hasNonPropertyOption: true,
+    propertyLabel: '涉及房产/存款等财产分割',
+    nonPropertyLabel: '纯离婚/只争抚养权，不分财产',
+    quickAmounts: [
+      { label: '30万', val: 300000 },
+      { label: '80万', val: 800000 },
+      { label: '150万', val: 1500000 },
+      { label: '300万', val: 3000000 },
+      { label: '500万', val: 5000000 },
+      { label: '800万', val: 8000000 },
+      { label: '1500万', val: 15000000 },
+      { label: '3000万+', val: 30000000 },
+    ],
+    sliderMin: 50000,
+    sliderMax: 30000000,
+    sliderStep: 50000,
+  },
+  ip: {
+    title: '你主张的侵权赔偿 / 经济损失金额是多少？',
+    subtitle: '包含侵权获利、维权合理开支（公证费律师费）或法定索赔金额',
+    unit: '元',
+    quickAmounts: [
+      { label: '3万', val: 30000 },
+      { label: '5万', val: 50000 },
+      { label: '10万', val: 100000 },
+      { label: '20万', val: 200000 },
+      { label: '50万', val: 500000 },
+      { label: '100万', val: 1000000 },
+      { label: '200万', val: 2000000 },
+      { label: '500万+', val: 5000000 },
+    ],
+    sliderMin: 5000,
+    sliderMax: 5000000,
+    sliderStep: 5000,
+  },
+  company: {
+    title: '涉及的股权价值 / 商事争议金额？',
+    subtitle: '包含股权出资额、分红款、公司清算资产或合同损失',
+    unit: '元',
+    quickAmounts: [
+      { label: '10万', val: 100000 },
+      { label: '30万', val: 300000 },
+      { label: '50万', val: 500000 },
+      { label: '100万', val: 1000000 },
+      { label: '300万', val: 3000000 },
+      { label: '500万', val: 5000000 },
+      { label: '1000万', val: 10000000 },
+      { label: '3000万+', val: 30000000 },
+    ],
+    sliderMin: 20000,
+    sliderMax: 20000000,
+    sliderStep: 20000,
+  },
+  other: {
+    title: '本次纠纷涉及的总金额 / 索赔数额是多少？',
+    subtitle: '包含主张支付的款项、赔偿金及违约金',
+    unit: '元',
+    quickAmounts: [
+      { label: '2万', val: 20000 },
+      { label: '5万', val: 50000 },
+      { label: '10万', val: 100000 },
+      { label: '30万', val: 300000 },
+      { label: '50万', val: 500000 },
+      { label: '100万', val: 1000000 },
+      { label: '300万', val: 3000000 },
+      { label: '500万+', val: 5000000 },
+    ],
+    sliderMin: 5000,
+    sliderMax: 5000000,
+    sliderStep: 5000,
+  },
+};
+
 // 根据不同纠纷类型，动态匹配针对性的证据材料选项
 const EVIDENCE_MAP: Record<
   CaseCategory,
@@ -207,21 +389,11 @@ const EVIDENCE_MAP: Record<
   },
 };
 
-const USER_AMOUNTS = [
-  { label: '2万以内', val: 20000 },
-  { label: '5万', val: 50000 },
-  { label: '10万', val: 100000 },
-  { label: '30万', val: 300000 },
-  { label: '50万', val: 500000 },
-  { label: '100万', val: 1000000 },
-  { label: '300万', val: 3000000 },
-  { label: '500万+', val: 5000000 },
-];
-
 export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> = ({
   input,
   onChange,
 }) => {
+  const currentClaimConfig = CLAIM_CONFIG_MAP[input.category] || CLAIM_CONFIG_MAP.debt;
   const currentEvidenceOptions = EVIDENCE_MAP[input.category] || EVIDENCE_MAP.debt;
   const currentCategory = USER_FRIENDLY_SCENARIOS.find((s) => s.id === input.category) || USER_FRIENDLY_SCENARIOS[0];
 
@@ -248,7 +420,16 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
               <button
                 key={sc.id}
                 type="button"
-                onClick={() => onChange({ category: sc.id })}
+                onClick={() => {
+                  const newCategory = sc.id;
+                  const newConfig = CLAIM_CONFIG_MAP[newCategory];
+                  // If category changed, adjust default claim amount if previous was out of range
+                  const defaultAmount = newConfig.quickAmounts[2]?.val || 100000;
+                  onChange({
+                    category: newCategory,
+                    claimAmount: input.isPropertyCase ? defaultAmount : 0,
+                  });
+                }}
                 className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative flex items-start space-x-3 ${
                   isSelected
                     ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-500/20 text-blue-950 font-semibold shadow-xs'
@@ -271,68 +452,116 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         </div>
       </section>
 
-      {/* 问题 2：你想追回多少钱？ */}
+      {/* 问题 2：对应纠纷的定制金额问法 */}
       <section className="bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
-            <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">
               2
             </span>
-            <h3 className="font-bold text-sm sm:text-base text-slate-900">
-              你想向对方要回多少钱？ / 涉及多少金额？
-            </h3>
+            <div>
+              <h3 className="font-bold text-sm sm:text-base text-slate-900">
+                {currentClaimConfig.title}
+              </h3>
+              <p className="text-[11px] text-slate-500">{currentClaimConfig.subtitle}</p>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-lg sm:text-2xl font-black text-blue-600 tracking-tight">
-              ¥ {input.claimAmount.toLocaleString()}
-            </span>
-            <span className="text-xs text-slate-500 ml-1">元</span>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 pt-1">
-          {USER_AMOUNTS.map((q) => {
-            const isSelected = input.claimAmount === q.val;
-            return (
+          {/* 针对离婚/家事等支持纯非财产诉求的切换 */}
+          {currentClaimConfig.hasNonPropertyOption && (
+            <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs font-medium self-start sm:self-auto shrink-0">
               <button
-                key={q.val}
                 type="button"
-                onClick={() => onChange({ isPropertyCase: true, claimAmount: q.val })}
-                className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-blue-600 text-white shadow-xs scale-[1.02]'
-                    : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'
+                onClick={() => onChange({ isPropertyCase: true, claimAmount: 1500000 })}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  input.isPropertyCase
+                    ? 'bg-white text-blue-600 shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {q.label}
+                {currentClaimConfig.propertyLabel || '分财产'}
               </button>
-            );
-          })}
+              <button
+                type="button"
+                onClick={() => onChange({ isPropertyCase: false, claimAmount: 0 })}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                  !input.isPropertyCase
+                    ? 'bg-white text-blue-600 shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {currentClaimConfig.nonPropertyLabel || '不分财产'}
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center pt-1">
-          <div className="sm:col-span-2">
-            <input
-              type="range"
-              min="5000"
-              max="3000000"
-              step="5000"
-              value={input.claimAmount > 3000000 ? 3000000 : input.claimAmount}
-              onChange={(e) => onChange({ isPropertyCase: true, claimAmount: Number(e.target.value) })}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-            />
+        {input.isPropertyCase ? (
+          <>
+            <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+              <span className="text-xs text-slate-500">当前选择金额：</span>
+              <div className="text-right">
+                <span className="text-lg sm:text-2xl font-black text-blue-600 tracking-tight">
+                  ¥ {input.claimAmount.toLocaleString()}
+                </span>
+                <span className="text-xs text-slate-500 ml-1">元</span>
+              </div>
+            </div>
+
+            {/* 动态快捷金额按钮 */}
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 pt-1">
+              {currentClaimConfig.quickAmounts.map((q) => {
+                const isSelected = input.claimAmount === q.val;
+                return (
+                  <button
+                    key={q.val}
+                    type="button"
+                    onClick={() => onChange({ isPropertyCase: true, claimAmount: q.val })}
+                    className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-xs scale-[1.02]'
+                        : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {q.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 自定义拖动与输入 */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center pt-1">
+              <div className="sm:col-span-2">
+                <input
+                  type="range"
+                  min={currentClaimConfig.sliderMin}
+                  max={currentClaimConfig.sliderMax}
+                  step={currentClaimConfig.sliderStep}
+                  value={input.claimAmount > currentClaimConfig.sliderMax ? currentClaimConfig.sliderMax : input.claimAmount}
+                  onChange={(e) => onChange({ isPropertyCase: true, claimAmount: Number(e.target.value) })}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-bold">¥</span>
+                <input
+                  type="number"
+                  value={input.claimAmount || ''}
+                  onChange={(e) => onChange({ isPropertyCase: true, claimAmount: Math.max(0, Number(e.target.value)) })}
+                  placeholder="输入准确金额"
+                  className="w-full pl-7 pr-3 py-2 text-xs sm:text-sm font-bold bg-slate-50 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+            <span className="font-bold text-slate-800">当前选择：不涉及共同财产分割（纯人身关系/争抚养权诉讼）</span>
+            <p className="text-[11px] text-slate-500">
+              法院仅收取基础案件受理费（通常 150~300 元），律师按基础件计费。
+            </p>
           </div>
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 text-xs font-bold">¥</span>
-            <input
-              type="number"
-              value={input.claimAmount || ''}
-              onChange={(e) => onChange({ isPropertyCase: true, claimAmount: Math.max(0, Number(e.target.value)) })}
-              placeholder="输入准确金额"
-              className="w-full pl-7 pr-3 py-2 text-xs sm:text-sm font-bold bg-slate-50 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
+        )}
       </section>
 
       {/* 问题 3：手头保存了哪些材料？（已根据上方的纠纷类型动态精准匹配！） */}
