@@ -2,20 +2,18 @@ import { useState, useMemo } from 'react';
 import type { CaseInputState } from './types';
 import { runFullCaseAnalysis } from './utils/decisionEngine';
 import { Header } from './components/Header';
-import { QuickResultHero } from './components/QuickResultHero';
-import { CaseInputSection } from './components/CaseInputSection';
-import { FinancialSummaryCard } from './components/FinancialSummaryCard';
-import { TimeAndEffortCard } from './components/TimeAndEffortCard';
-import { LawyerWorkloadCard } from './components/LawyerWorkloadCard';
-import { RoiDecisionCard } from './components/RoiDecisionCard';
+import { CaseConfigurator } from './components/CaseConfigurator';
+import { ConfiguratorBottomBar } from './components/ConfiguratorBottomBar';
+import { ConfigDetailDrawer } from './components/ConfigDetailDrawer';
 import { LawyerQuoteCard } from './components/LawyerQuoteCard';
 import { ReportModal } from './components/ReportModal';
 import { FaqSection } from './components/FaqSection';
 import { Footer } from './components/Footer';
-import { MobileStickyBottomBar } from './components/MobileStickyBottomBar';
+import { Sparkles, SlidersHorizontal } from 'lucide-react';
 
 export function App() {
   const [activeMode, setActiveMode] = useState<'client' | 'lawyer'>('client');
+  const [showDetailDrawer, setShowDetailDrawer] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
   const [caseInput, setCaseInput] = useState<CaseInputState>({
@@ -47,7 +45,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100/80 flex flex-col selection:bg-blue-500 selection:text-white pb-16 md:pb-0">
+    <div className="min-h-screen bg-slate-100/80 flex flex-col selection:bg-blue-500 selection:text-white pb-24 sm:pb-28">
       {/* Top Header */}
       <Header
         currentRegionId={caseInput.regionId}
@@ -58,50 +56,62 @@ export function App() {
         onScrollToFaq={scrollToFaq}
       />
 
-      {/* Main Single Column Container */}
-      <main className="flex-1 max-w-3xl w-full mx-auto px-3.5 sm:px-6 py-6 sm:py-8 space-y-5">
-        {/* 1. 顶部置顶一眼看懂的报价与结论看板 */}
-        <QuickResultHero
-          analysis={analysis}
-          onOpenReport={() => setShowReportModal(true)}
-        />
+      {/* Main Configurator Area */}
+      <main className="flex-1 max-w-3xl w-full mx-auto px-3.5 sm:px-6 py-5 sm:py-6 space-y-4">
+        {/* Intro Header */}
+        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="inline-flex items-center space-x-1.5 bg-blue-500/20 text-blue-300 px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
+              <Sparkles className="w-3 h-3" />
+              <span>诉讼全要素智能选配器</span>
+            </div>
+            <h1 className="text-base sm:text-xl font-bold tracking-tight">
+              调整上方诉讼条件 · 底部实时演算最终成本与策略
+            </h1>
+          </div>
+          <div className="hidden sm:flex items-center space-x-1 text-xs text-indigo-200 bg-white/10 px-3 py-1.5 rounded-xl">
+            <SlidersHorizontal className="w-4 h-4" />
+            <span>实时测算中</span>
+          </div>
+        </div>
 
-        {/* 律师报价模式卡片 (若激活) */}
+        {/* Lawyer Quote Tool (if in Lawyer Mode) */}
         {activeMode === 'lawyer' && (
           <div className="animate-in fade-in slide-in-from-top-4 duration-300">
             <LawyerQuoteCard analysis={analysis} />
           </div>
         )}
 
-        {/* 2. 案情与诉讼参数输入卡片 (修改各项让测算更精准) */}
-        <CaseInputSection input={caseInput} onChange={handleInputChange} />
+        {/* The 6-Step Configurator (Apple/E-commerce Style) */}
+        <CaseConfigurator input={caseInput} onChange={handleInputChange} />
 
-        {/* 3. 全景金钱账本明细卡片 */}
-        <FinancialSummaryCard financial={analysis.financial} claimAmount={caseInput.claimAmount} />
-
-        {/* 4. 双维度时间与精力分析卡片 */}
-        <TimeAndEffortCard timeAndEffort={analysis.timeAndEffort} />
-
-        {/* 5. 律师工作量清单与工时拆解卡片 */}
-        <LawyerWorkloadCard workload={analysis.workload} lawyerFeeMedian={analysis.financial.lawyerFeeMedian} />
-
-        {/* 6. 胜诉率与 ROI 回款决策沙盘卡片 */}
-        <RoiDecisionCard roi={analysis.roi} claimAmount={caseInput.claimAmount} />
-
-        {/* 7. 常见问答 FAQ 卡片 */}
+        {/* FAQ Section */}
         <FaqSection />
       </main>
 
       {/* Footer */}
       <Footer />
 
-      {/* Mobile Sticky Bottom Bar */}
-      <MobileStickyBottomBar
+      {/* Persistent Bottom Bar (Always Visible at Bottom) */}
+      <ConfiguratorBottomBar
         analysis={analysis}
+        onOpenDetails={() => setShowDetailDrawer(true)}
         onOpenReport={() => setShowReportModal(true)}
       />
 
-      {/* Report Modal */}
+      {/* Detailed Breakdown Drawer / Modal */}
+      {showDetailDrawer && (
+        <ConfigDetailDrawer
+          analysis={analysis}
+          onClose={() => setShowDetailDrawer(false)}
+          onOpenReport={() => {
+            setShowDetailDrawer(false);
+            setShowReportModal(true);
+          }}
+        />
+      )}
+
+      {/* Print / Export Report Modal */}
       {showReportModal && (
         <ReportModal analysis={analysis} onClose={() => setShowReportModal(false)} />
       )}
