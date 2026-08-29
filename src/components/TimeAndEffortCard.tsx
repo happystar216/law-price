@@ -88,60 +88,96 @@ export const TimeAndEffortCard: React.FC<TimeAndEffortCardProps> = ({ timeAndEff
         </div>
       </div>
 
-      {/* 委托律师 vs 自己打官司 真实场景对比表 */}
+      {/* 委托律师 vs 自己打官司 真实场景对比表：移动端自适应分块 / 桌面端3列表格 */}
       <div className="border border-slate-200 rounded-2xl overflow-hidden text-xs">
-        <div className="bg-slate-900 text-white px-4 py-3 font-bold grid grid-cols-12">
-          <div className="col-span-4">维权环节与精力消耗项</div>
-          <div className="col-span-4 text-emerald-400">委托律师办理（省心托管）</div>
-          <div className="col-span-4 text-slate-300">自己亲自打官司（亲力亲为）</div>
+        <div className="hidden sm:grid bg-slate-900 text-white px-4 py-3 font-bold grid-cols-12">
+          <div className="sm:col-span-4">维权环节与精力消耗项</div>
+          <div className="sm:col-span-4 text-emerald-400">委托律师办理（省心托管）</div>
+          <div className="sm:col-span-4 text-slate-300">自己亲自打官司（亲力亲为）</div>
         </div>
 
         <div className="divide-y divide-slate-100">
-          <div className="px-4 py-3 grid grid-cols-12 items-center hover:bg-slate-50">
-            <div className="col-span-4 font-bold text-slate-800">1. 证据整理与起诉状撰写</div>
-            <div className="col-span-4 text-emerald-700 flex items-center space-x-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>只需微信发微信记录/借条照片（耗时30分钟）</span>
+          {/* 1. 证据整理与起诉状撰写 */}
+          <div className="p-3.5 sm:py-3 sm:px-4 flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-0 sm:items-center hover:bg-slate-50 transition-colors">
+            <div className="sm:col-span-4 font-bold text-slate-800 text-xs sm:text-sm">
+              1. 证据整理与起诉状撰写
             </div>
-            <div className="col-span-4 text-slate-600 flex items-center space-x-1">
-              <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-              <span>需自行查法条、排版起诉状格式（耗时约15小时）</span>
+            <div className="sm:col-span-4 bg-emerald-50/80 sm:bg-transparent p-2.5 sm:p-0 rounded-xl text-emerald-800 sm:text-emerald-700 flex items-start sm:items-center space-x-1.5 leading-relaxed">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="sm:hidden font-bold block text-emerald-950 text-[11px]">委托律师办理：</span>
+                <span>只需微信发转账记录/合同照片（耗时约30分钟）</span>
+              </div>
             </div>
-          </div>
-
-          <div className="px-4 py-3 grid grid-cols-12 items-center hover:bg-slate-50">
-            <div className="col-span-4 font-bold text-slate-800">2. 法院立案与财产保全冻结</div>
-            <div className="col-span-4 text-emerald-700 flex items-center space-x-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>律师线上通道一键立案，代办财产保全</span>
-            </div>
-            <div className="col-span-4 text-slate-600 flex items-center space-x-1">
-              <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-              <span>工作日请假去法院立案庭排队，材料不对多次补正</span>
+            <div className="sm:col-span-4 bg-slate-50 sm:bg-transparent p-2.5 sm:p-0 rounded-xl text-slate-600 flex items-start sm:items-center space-x-1.5 leading-relaxed">
+              <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="sm:hidden font-bold block text-slate-800 text-[11px]">自己打官司：</span>
+                <span>需自行查法条、排版规范格式（耗时约15小时）</span>
+              </div>
             </div>
           </div>
 
-          <div className="px-4 py-3 grid grid-cols-12 items-center hover:bg-slate-50">
-            <div className="col-span-4 font-bold text-slate-800">3. 开庭答辩与法庭辩论</div>
-            <div className="col-span-4 text-emerald-700 flex items-center space-x-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>律师全权出庭辩论，当事人正常上班（0次出庭）</span>
+          {/* 2. 法院立案与财产保全冻结 */}
+          <div className="p-3.5 sm:py-3 sm:px-4 flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-0 sm:items-center hover:bg-slate-50 transition-colors">
+            <div className="sm:col-span-4 font-bold text-slate-800 text-xs sm:text-sm">
+              2. 法院立案与财产保全冻结
             </div>
-            <div className="col-span-4 text-slate-600 flex items-center space-x-1">
-              <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-              <span>必须请假亲自出庭，面对法官质询和对方抗辩</span>
+            <div className="sm:col-span-4 bg-emerald-50/80 sm:bg-transparent p-2.5 sm:p-0 rounded-xl text-emerald-800 sm:text-emerald-700 flex items-start sm:items-center space-x-1.5 leading-relaxed">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="sm:hidden font-bold block text-emerald-950 text-[11px]">委托律师办理：</span>
+                <span>律师线上绿色通道一键代办，跟进财产冻结</span>
+              </div>
+            </div>
+            <div className="sm:col-span-4 bg-slate-50 sm:bg-transparent p-2.5 sm:p-0 rounded-xl text-slate-600 flex items-start sm:items-center space-x-1.5 leading-relaxed">
+              <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="sm:hidden font-bold block text-slate-800 text-[11px]">自己打官司：</span>
+                <span>工作日请假去立案庭排队，格式不对多次跑腿补正</span>
+              </div>
             </div>
           </div>
 
-          <div className="px-4 py-3 grid grid-cols-12 items-center hover:bg-slate-50">
-            <div className="col-span-4 font-bold text-slate-800">4. 判决执行与催款跟进</div>
-            <div className="col-span-4 text-emerald-700 flex items-center space-x-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>律师对接执行法官，查封对方微信银行卡</span>
+          {/* 3. 开庭答辩与法庭辩论 */}
+          <div className="p-3.5 sm:py-3 sm:px-4 flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-0 sm:items-center hover:bg-slate-50 transition-colors">
+            <div className="sm:col-span-4 font-bold text-slate-800 text-xs sm:text-sm">
+              3. 开庭答辩与法庭辩论
             </div>
-            <div className="col-span-4 text-slate-600 flex items-center space-x-1">
-              <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-              <span>自己跑执行局立案，不知如何申请网络总对总查控</span>
+            <div className="sm:col-span-4 bg-emerald-50/80 sm:bg-transparent p-2.5 sm:p-0 rounded-xl text-emerald-800 sm:text-emerald-700 flex items-start sm:items-center space-x-1.5 leading-relaxed">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="sm:hidden font-bold block text-emerald-950 text-[11px]">委托律师办理：</span>
+                <span>律师全权出庭辩论质证，当事人 0 次到庭正常上班</span>
+              </div>
+            </div>
+            <div className="sm:col-span-4 bg-slate-50 sm:bg-transparent p-2.5 sm:p-0 rounded-xl text-slate-600 flex items-start sm:items-center space-x-1.5 leading-relaxed">
+              <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="sm:hidden font-bold block text-slate-800 text-[11px]">自己打官司：</span>
+                <span>必须请假亲自出庭，面对法官质询和对方抗辩易紧张</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. 判决执行与催款跟进 */}
+          <div className="p-3.5 sm:py-3 sm:px-4 flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-0 sm:items-center hover:bg-slate-50 transition-colors">
+            <div className="sm:col-span-4 font-bold text-slate-800 text-xs sm:text-sm">
+              4. 判决执行与催款跟进
+            </div>
+            <div className="sm:col-span-4 bg-emerald-50/80 sm:bg-transparent p-2.5 sm:p-0 rounded-xl text-emerald-800 sm:text-emerald-700 flex items-start sm:items-center space-x-1.5 leading-relaxed">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="sm:hidden font-bold block text-emerald-950 text-[11px]">委托律师办理：</span>
+                <span>律师对接执行法官，敦促全国网络总对总划扣银行卡</span>
+              </div>
+            </div>
+            <div className="sm:col-span-4 bg-slate-50 sm:bg-transparent p-2.5 sm:p-0 rounded-xl text-slate-600 flex items-start sm:items-center space-x-1.5 leading-relaxed">
+              <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="sm:hidden font-bold block text-slate-800 text-[11px]">自己打官司：</span>
+                <span>自己跑执行局立案，不知如何查控对方隐匿资产</span>
+              </div>
             </div>
           </div>
         </div>

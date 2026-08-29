@@ -795,9 +795,9 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                 }`}
               >
                 <span className="text-xl shrink-0 mt-0.5">{sc.emoji}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs sm:text-sm font-bold truncate pr-5">{sc.title}</div>
-                  <div className="text-[11px] text-slate-500 truncate mt-0.5">{sc.desc}</div>
+                <div className="min-w-0 flex-1 pr-4">
+                  <div className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">{sc.title}</div>
+                  <div className="text-[11px] text-slate-500 leading-normal mt-0.5">{sc.desc}</div>
                 </div>
                 {isSelected && (
                   <span className="absolute top-3 right-3 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0">

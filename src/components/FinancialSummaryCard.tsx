@@ -89,47 +89,54 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({ fina
         )}
       </div>
 
-      {/* 费用明细表格 */}
+      {/* 费用明细表格：移动端自适应卡片行 / 桌面端4列表格 */}
       <div className="border border-slate-200 rounded-xl overflow-hidden text-xs">
-        <div className="bg-slate-50 px-4 py-2.5 font-bold text-slate-700 grid grid-cols-12 border-b border-slate-200">
-          <div className="col-span-4 sm:col-span-3">各项费用名目</div>
-          <div className="col-span-4 sm:col-span-3">金额参考</div>
-          <div className="col-span-4 sm:col-span-3">承担归属规则</div>
-          <div className="hidden sm:block sm:col-span-3 text-right">法律与行业依据</div>
+        <div className="hidden sm:grid bg-slate-50 px-4 py-2.5 font-bold text-slate-700 grid-cols-12 border-b border-slate-200">
+          <div className="sm:col-span-3">各项费用名目</div>
+          <div className="sm:col-span-3">金额参考</div>
+          <div className="sm:col-span-3">承担归属规则</div>
+          <div className="sm:col-span-3 text-right">法律与行业依据</div>
         </div>
 
         <div className="divide-y divide-slate-100">
           {/* 律师费 */}
-          <div className="px-4 py-3 grid grid-cols-12 items-center hover:bg-slate-50/60 transition-colors">
-            <div className="col-span-4 sm:col-span-3 font-semibold text-slate-800">
-              律师代理服务费
+          <div className="p-3 sm:py-3 sm:px-4 flex flex-col sm:grid sm:grid-cols-12 gap-1.5 sm:gap-0 sm:items-center hover:bg-slate-50/60 transition-colors">
+            <div className="sm:col-span-3 font-semibold text-slate-800 flex items-center justify-between sm:block">
+              <span>律师代理服务费</span>
+              <span className="sm:hidden font-bold text-slate-900">
+                ¥{financial.lawyerFeeMin.toLocaleString()} ~ {financial.lawyerFeeMax.toLocaleString()}
+              </span>
             </div>
-            <div className="col-span-4 sm:col-span-3 font-bold text-slate-900">
+            <div className="hidden sm:block sm:col-span-3 font-bold text-slate-900">
               ¥ {financial.lawyerFeeMin.toLocaleString()} ~ {financial.lawyerFeeMax.toLocaleString()}
               <div className="text-[10px] text-slate-400 font-normal">
                 起诉地参考均价: ¥{financial.lawyerFeeMedian.toLocaleString()}
               </div>
             </div>
-            <div className="col-span-4 sm:col-span-3">
+            <div className="sm:col-span-3 flex items-center justify-between sm:block text-[11px] sm:text-xs">
+              <span className="sm:hidden text-slate-400">承担规则：</span>
               {financial.canTransferLawyerFee ? (
                 <span className="text-emerald-700 font-bold">依法可要求对方全额报销</span>
               ) : (
-                <span className="text-slate-600">委托人自行支付</span>
+                <span className="text-slate-600 font-medium">委托人自行支付</span>
               )}
             </div>
-            <div className="hidden sm:block sm:col-span-3 text-right text-slate-400 text-[11px]">
+            <div className="sm:col-span-3 text-left sm:text-right text-slate-400 text-[10px] sm:text-[11px]">
               起诉地当地行业指导参考
             </div>
           </div>
 
           {/* 异地办案差旅费对比（核心机会点） */}
           {financial.isCrossRegion && (
-            <div className="px-4 py-3 grid grid-cols-12 items-center bg-emerald-50/50 hover:bg-emerald-50/80 transition-colors border-l-2 border-emerald-500">
-              <div className="col-span-4 sm:col-span-3 font-bold text-emerald-950 flex items-center space-x-1">
-                <Plane className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>异地出庭办案差旅费</span>
+            <div className="p-3 sm:py-3 sm:px-4 flex flex-col sm:grid sm:grid-cols-12 gap-1.5 sm:gap-0 sm:items-center bg-emerald-50/50 hover:bg-emerald-50/80 transition-colors border-l-2 border-emerald-500">
+              <div className="sm:col-span-3 font-bold text-emerald-950 flex items-center justify-between sm:justify-start space-x-1">
+                <span className="flex items-center space-x-1">
+                  <Plane className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>异地办案差旅费</span>
+                </span>
+                <span className="sm:hidden text-emerald-700 font-black">✨ 平台直配: ¥0 元</span>
               </div>
-              <div className="col-span-4 sm:col-span-3">
+              <div className="hidden sm:block sm:col-span-3">
                 <div className="text-emerald-700 font-black text-xs">
                   ✨ 平台直配: ¥0 元
                 </div>
@@ -137,26 +144,31 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({ fina
                   传统本地律师: ¥{financial.traditionalTravelCostMin.toLocaleString()}~{financial.traditionalTravelCostMax.toLocaleString()}
                 </div>
               </div>
-              <div className="col-span-4 sm:col-span-3 text-emerald-700 font-bold">
+              <div className="sm:col-span-3 text-emerald-700 font-bold text-[11px] sm:text-xs">
                 平台直配当地律师 · 零差旅
               </div>
-              <div className="hidden sm:block sm:col-span-3 text-right text-emerald-600 text-[11px] font-bold">
+              <div className="sm:col-span-3 text-left sm:text-right text-emerald-600 text-[10px] sm:text-[11px] font-bold">
                 立省约 ¥{financial.travelCostSaved.toLocaleString()} 差旅费
               </div>
             </div>
           )}
 
           {/* 法院诉讼费 */}
-          <div className="px-4 py-3 grid grid-cols-12 items-center hover:bg-slate-50/60 transition-colors">
-            <div className="col-span-4 sm:col-span-3 font-semibold text-slate-800 flex items-center space-x-1">
-              <span>法院案件受理费</span>
-              {financial.isSummaryDiscount && (
-                <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-normal">
-                  快速审减半
-                </span>
-              )}
+          <div className="p-3 sm:py-3 sm:px-4 flex flex-col sm:grid sm:grid-cols-12 gap-1.5 sm:gap-0 sm:items-center hover:bg-slate-50/60 transition-colors">
+            <div className="sm:col-span-3 font-semibold text-slate-800 flex items-center justify-between sm:justify-start space-x-1">
+              <span className="flex items-center space-x-1">
+                <span>法院案件受理费</span>
+                {financial.isSummaryDiscount && (
+                  <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.2 rounded font-normal">
+                    快速审减半
+                  </span>
+                )}
+              </span>
+              <span className="sm:hidden font-bold text-blue-600">
+                ¥{financial.courtFeeDiscounted.toLocaleString()}
+              </span>
             </div>
-            <div className="col-span-4 sm:col-span-3 font-bold text-blue-600">
+            <div className="hidden sm:block sm:col-span-3 font-bold text-blue-600">
               ¥ {financial.courtFeeDiscounted.toLocaleString()}{' '}
               {financial.isSummaryDiscount && (
                 <span className="text-[10px] text-slate-400 line-through">
@@ -164,45 +176,54 @@ export const FinancialSummaryCard: React.FC<FinancialSummaryCardProps> = ({ fina
                 </span>
               )}
             </div>
-            <div className="col-span-4 sm:col-span-3 text-emerald-700 font-bold">
-              打赢由对方全额承担
+            <div className="sm:col-span-3 flex items-center justify-between sm:block text-emerald-700 font-bold text-[11px] sm:text-xs">
+              <span className="sm:hidden text-slate-400 font-normal">承担规则：</span>
+              <span>打赢由对方全额承担 (法院返还)</span>
             </div>
-            <div className="hidden sm:block sm:col-span-3 text-right text-slate-400 text-[11px]">
+            <div className="sm:col-span-3 text-left sm:text-right text-slate-400 text-[10px] sm:text-[11px]">
               《诉讼费用交纳办法》第13条
             </div>
           </div>
 
           {/* 财产保全费 */}
-          <div className="px-4 py-3 grid grid-cols-12 items-center hover:bg-slate-50/60 transition-colors">
-            <div className="col-span-4 sm:col-span-3 font-semibold text-slate-800">
-              财产保全费 (冻结对方资产)
+          <div className="p-3 sm:py-3 sm:px-4 flex flex-col sm:grid sm:grid-cols-12 gap-1.5 sm:gap-0 sm:items-center hover:bg-slate-50/60 transition-colors">
+            <div className="sm:col-span-3 font-semibold text-slate-800 flex items-center justify-between sm:block">
+              <span>财产保全费 (冻结资产)</span>
+              <span className="sm:hidden font-bold text-slate-900">
+                ¥{(financial.preservationFee + financial.preservationInsuranceFee).toLocaleString()}
+              </span>
             </div>
-            <div className="col-span-4 sm:col-span-3 font-bold text-slate-900">
+            <div className="hidden sm:block sm:col-span-3 font-bold text-slate-900">
               ¥ {(financial.preservationFee + financial.preservationInsuranceFee).toLocaleString()}
               <div className="text-[10px] text-slate-400 font-normal">
                 保全费 ¥{financial.preservationFee.toLocaleString()} + 保险费 ¥{financial.preservationInsuranceFee.toLocaleString()}
               </div>
             </div>
-            <div className="col-span-4 sm:col-span-3 text-emerald-700 font-bold">
-              打赢由对方全额承担
+            <div className="sm:col-span-3 flex items-center justify-between sm:block text-emerald-700 font-bold text-[11px] sm:text-xs">
+              <span className="sm:hidden text-slate-400 font-normal">承担规则：</span>
+              <span>打赢由对方全额承担</span>
             </div>
-            <div className="hidden sm:block sm:col-span-3 text-right text-slate-400 text-[11px]">
-              最高5000元封顶
+            <div className="sm:col-span-3 text-left sm:text-right text-slate-400 text-[10px] sm:text-[11px]">
+              最高5000元封顶 + 责任险
             </div>
           </div>
 
           {/* 强制执行费 */}
-          <div className="px-4 py-3 grid grid-cols-12 items-center hover:bg-slate-50/60 transition-colors">
-            <div className="col-span-4 sm:col-span-3 font-semibold text-slate-800">
-              申请法院强制执行费
+          <div className="p-3 sm:py-3 sm:px-4 flex flex-col sm:grid sm:grid-cols-12 gap-1.5 sm:gap-0 sm:items-center hover:bg-slate-50/60 transition-colors">
+            <div className="sm:col-span-3 font-semibold text-slate-800 flex items-center justify-between sm:block">
+              <span>申请法院强制执行费</span>
+              <span className="sm:hidden font-bold text-slate-900">
+                ¥{financial.executionFee.toLocaleString()}
+              </span>
             </div>
-            <div className="col-span-4 sm:col-span-3 font-bold text-slate-900">
+            <div className="hidden sm:block sm:col-span-3 font-bold text-slate-900">
               ¥ {financial.executionFee.toLocaleString()}
             </div>
-            <div className="col-span-4 sm:col-span-3 text-blue-700 font-bold">
-              前期不用交 (从追回钱里扣)
+            <div className="sm:col-span-3 flex items-center justify-between sm:block text-blue-700 font-bold text-[11px] sm:text-xs">
+              <span className="sm:hidden text-slate-400 font-normal">承担规则：</span>
+              <span>前期不用交 (从追回钱里扣)</span>
             </div>
-            <div className="hidden sm:block sm:col-span-3 text-right text-slate-400 text-[11px]">
+            <div className="sm:col-span-3 text-left sm:text-right text-slate-400 text-[10px] sm:text-[11px]">
               由被执行人承担
             </div>
           </div>
