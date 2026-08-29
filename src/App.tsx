@@ -52,7 +52,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100/80 flex flex-col selection:bg-blue-500 selection:text-white pb-36 sm:pb-32">
+    <div className="min-h-screen bg-slate-100/80 flex flex-col selection:bg-blue-500 selection:text-white pb-24 sm:pb-28">
       {/* Top Header */}
       <Header
         onOpenMatchLawyer={() => setShowMatchLawyerModal(true)}

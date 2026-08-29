@@ -26,54 +26,54 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
   const { financial, timeAndEffort, roi, workload } = analysis;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/98 backdrop-blur-xl border-t border-slate-800 text-white shadow-2xl safe-area-bottom">
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 space-y-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/96 backdrop-blur-xl border-t border-slate-800 text-white shadow-2xl safe-area-bottom">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5 space-y-1.5">
         {/* 顶部通俗提示 + 匹配律师按钮 */}
-        <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/80 pb-1.5 px-1 gap-2">
-          <div className="flex items-center space-x-1 min-w-0">
+        <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800/80 pb-1 px-0.5 gap-2">
+          <div className="flex items-center space-x-1.5 min-w-0">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="font-medium text-slate-300 truncate">
-              实时测算结果（点击下方任意卡片，查看详细怎么算的）：
+            <span className="font-medium text-slate-300 text-[10px] sm:text-[11px] truncate">
+              实时测算结果（左右滑动或点击卡片看明细）：
             </span>
           </div>
           <button
             onClick={onOpenMatchLawyer}
-            className="flex items-center space-x-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 shadow-md shadow-blue-500/25"
+            className="flex items-center space-x-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white px-2.5 sm:px-3.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer shrink-0 shadow-sm shadow-blue-500/20"
           >
-            <PhoneCall className="w-3.5 h-3.5" />
+            <PhoneCall className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span>为您匹配专业律师</span>
           </button>
         </div>
 
-        {/* 5 大核心结果卡片 */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
+        {/* 5 大核心结果卡片：移动端单行水平轻滑 / 桌面端5列栅格 */}
+        <div className="flex sm:grid sm:grid-cols-5 gap-1.5 sm:gap-2.5 overflow-x-auto sm:overflow-x-visible pb-0.5 sm:pb-0 scrollbar-none snap-x snap-mandatory">
           {/* 1. 金钱花费 */}
           <button
             type="button"
             onClick={() => onOpenMetric('financial')}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-amber-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between"
+            className="shrink-0 w-[130px] sm:w-auto p-1.5 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-amber-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between snap-start"
           >
             <div className="flex items-center justify-between text-[10px] text-amber-400 font-bold">
-              <span className="flex items-center space-x-1">
-                <Coins className="w-3 h-3 text-amber-400" />
-                <span>① 预计总花费</span>
+              <span className="flex items-center space-x-1 truncate">
+                <Coins className="w-3 h-3 text-amber-400 shrink-0" />
+                <span className="truncate">① 预计总花费</span>
               </span>
-              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-amber-300 transition-transform" />
+              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-amber-300 transition-transform shrink-0 hidden sm:block" />
             </div>
-            <div className="text-xs sm:text-sm font-black text-white mt-1 tracking-tight">
+            <div className="text-xs sm:text-sm font-black text-white mt-0.5 sm:mt-1 tracking-tight truncate">
               {financial.canTransferLawyerFee ? (
                 <span className="text-emerald-400 font-black">¥0 (对方全掏)</span>
               ) : (
                 <>
                   约 ¥{financial.finalNetCostMin.toLocaleString()}
-                  <span className="text-[10px] text-slate-400 font-normal ml-0.5">~ {financial.finalNetCostMax.toLocaleString()}</span>
+                  <span className="text-[10px] text-slate-400 font-normal ml-0.5 hidden sm:inline">~ {financial.finalNetCostMax.toLocaleString()}</span>
                 </>
               )}
             </div>
-            <div className="text-[10px] text-slate-400 truncate mt-0.5 font-medium">
+            <div className="text-[9px] sm:text-[10px] text-slate-400 truncate mt-0.5 font-medium">
               {financial.canTransferLawyerFee
-                ? '✨ 约定违约承担 · 对方买单'
-                : '诉讼费打赢退还 · 仅律师费'}
+                ? '✨ 对方全额买单'
+                : '诉讼费打赢退还'}
             </div>
           </button>
 
@@ -81,20 +81,20 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
           <button
             type="button"
             onClick={() => onOpenMetric('effort')}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-emerald-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between"
+            className="shrink-0 w-[130px] sm:w-auto p-1.5 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-emerald-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between snap-start"
           >
             <div className="flex items-center justify-between text-[10px] text-emerald-400 font-bold">
-              <span className="flex items-center space-x-1">
-                <UserCheck className="w-3 h-3 text-emerald-400" />
-                <span>② 耽误多少精力</span>
+              <span className="flex items-center space-x-1 truncate">
+                <UserCheck className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span className="truncate">② 耽误多少精力</span>
               </span>
-              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-emerald-300 transition-transform" />
+              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-emerald-300 transition-transform shrink-0 hidden sm:block" />
             </div>
-            <div className="text-xs sm:text-sm font-black text-emerald-300 mt-1 tracking-tight">
-              ~{timeAndEffort.clientHoursWithLawyer}小时 · 出庭{timeAndEffort.courtAppearancesWithLawyer}次
+            <div className="text-xs sm:text-sm font-black text-emerald-300 mt-0.5 sm:mt-1 tracking-tight truncate">
+              ~{timeAndEffort.clientHoursWithLawyer}h · 出庭{timeAndEffort.courtAppearancesWithLawyer}次
             </div>
-            <div className="text-[10px] text-slate-400 truncate mt-0.5">
-              去律所{timeAndEffort.lawFirmVisitsWithLawyer}次 · 律师全权代办
+            <div className="text-[9px] sm:text-[10px] text-slate-400 truncate mt-0.5">
+              去律所{timeAndEffort.lawFirmVisitsWithLawyer}次 · 全权代办
             </div>
           </button>
 
@@ -102,20 +102,20 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
           <button
             type="button"
             onClick={() => onOpenMetric('timeline')}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-indigo-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between"
+            className="shrink-0 w-[130px] sm:w-auto p-1.5 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-indigo-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between snap-start"
           >
             <div className="flex items-center justify-between text-[10px] text-indigo-300 font-bold">
-              <span className="flex items-center space-x-1">
-                <Calendar className="w-3 h-3 text-indigo-400" />
-                <span>③ 要等多久出结果</span>
+              <span className="flex items-center space-x-1 truncate">
+                <Calendar className="w-3 h-3 text-indigo-400 shrink-0" />
+                <span className="truncate">③ 等多久出结果</span>
               </span>
-              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-indigo-300 transition-transform" />
+              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-indigo-300 transition-transform shrink-0 hidden sm:block" />
             </div>
-            <div className="text-xs sm:text-sm font-black text-indigo-200 mt-1 tracking-tight">
+            <div className="text-xs sm:text-sm font-black text-indigo-200 mt-0.5 sm:mt-1 tracking-tight truncate">
               约 {timeAndEffort.calendarMonthsMin} ~ {timeAndEffort.calendarMonthsMax} 个月
             </div>
-            <div className="text-[10px] text-slate-400 truncate mt-0.5">
-              法院排期走流程 (正常生活)
+            <div className="text-[9px] sm:text-[10px] text-slate-400 truncate mt-0.5">
+              法院排期 (正常生活)
             </div>
           </button>
 
@@ -123,19 +123,19 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
           <button
             type="button"
             onClick={() => onOpenMetric('winrate')}
-            className="p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-blue-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between"
+            className="shrink-0 w-[130px] sm:w-auto p-1.5 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-blue-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between snap-start"
           >
             <div className="flex items-center justify-between text-[10px] text-blue-300 font-bold">
-              <span className="flex items-center space-x-1">
-                <TrendingUp className="w-3 h-3 text-blue-400" />
-                <span>④ 胜诉与拿钱把握</span>
+              <span className="flex items-center space-x-1 truncate">
+                <TrendingUp className="w-3 h-3 text-blue-400 shrink-0" />
+                <span className="truncate">④ 胜诉与拿钱</span>
               </span>
-              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-blue-300 transition-transform" />
+              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-blue-300 transition-transform shrink-0 hidden sm:block" />
             </div>
-            <div className="text-xs sm:text-sm font-black text-blue-200 mt-1 tracking-tight">
+            <div className="text-xs sm:text-sm font-black text-blue-200 mt-0.5 sm:mt-1 tracking-tight truncate">
               胜诉率 {Math.round(roi.winProbability * 100)}%
             </div>
-            <div className="text-[10px] text-slate-400 truncate mt-0.5">
+            <div className="text-[9px] sm:text-[10px] text-slate-400 truncate mt-0.5">
               回款率 {Math.round(roi.recoveryProbability * 100)}%
             </div>
           </button>
@@ -144,20 +144,20 @@ export const FiveMetricsBottomBar: React.FC<FiveMetricsBottomBarProps> = ({
           <button
             type="button"
             onClick={() => onOpenMetric('workload')}
-            className="col-span-2 sm:col-span-1 p-2 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-purple-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between"
+            className="shrink-0 w-[130px] sm:w-auto p-1.5 sm:p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-750 border border-slate-700/80 hover:border-purple-400/50 text-left transition-all cursor-pointer group flex flex-col justify-between snap-start"
           >
             <div className="flex items-center justify-between text-[10px] text-purple-300 font-bold">
-              <span className="flex items-center space-x-1">
-                <Briefcase className="w-3 h-3 text-purple-400" />
-                <span>⑤ 律师干了多少活</span>
+              <span className="flex items-center space-x-1 truncate">
+                <Briefcase className="w-3 h-3 text-purple-400 shrink-0" />
+                <span className="truncate">⑤ 律师干多少活</span>
               </span>
-              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-purple-300 transition-transform" />
+              <ChevronUp className="w-3 h-3 text-slate-400 group-hover:text-purple-300 transition-transform shrink-0 hidden sm:block" />
             </div>
-            <div className="text-xs sm:text-sm font-black text-purple-200 mt-1 tracking-tight">
-              约 {workload.totalHours} 专业工时
+            <div className="text-xs sm:text-sm font-black text-purple-200 mt-0.5 sm:mt-1 tracking-tight truncate">
+              ~{workload.totalHours} 专业工时
             </div>
-            <div className="text-[10px] text-slate-400 truncate mt-0.5">
-              4个阶段共13项具体交付
+            <div className="text-[9px] sm:text-[10px] text-slate-400 truncate mt-0.5">
+              4阶段共13项交付
             </div>
           </button>
         </div>

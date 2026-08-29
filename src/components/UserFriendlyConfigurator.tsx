@@ -1502,21 +1502,23 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
                       </div>
                     </div>
 
-                    {/* 律所与法院跑腿次数客观事实 */}
-                    <div className="bg-slate-50/90 p-2.5 rounded-xl border border-slate-200/80 text-[11px]">
-                      <div className="flex items-center justify-between text-slate-700">
-                        <div className="flex items-center space-x-1">
-                          <span className="font-bold text-slate-800">🏢 需去律所：</span>
-                          <span className="text-blue-700 font-bold">
-                            {v.isHome ? '0~1 次 (支持线上签署)' : '0 次 (线上直连)'}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span className="font-bold text-slate-800">🏛️ 需亲自出庭：</span>
-                          <span className="text-emerald-700 font-bold">
-                            {input.category === 'marriage' ? '1 次 (家事案核实)' : '0 次 (律师全权代办)'}
-                          </span>
-                        </div>
+                    {/* 律所与法院跑腿次数客观事实 - 拆成独立两行 */}
+                    <div className="bg-slate-50/90 p-2.5 rounded-xl border border-slate-200/80 text-[11px] space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-700 flex items-center space-x-1">
+                          <span>🏢 需去律所：</span>
+                        </span>
+                        <span className="text-blue-700 font-bold">
+                          {v.isHome ? '0~1 次 (支持线上签署)' : '0 次 (线上直连无需奔波)'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between border-t border-slate-200/60 pt-1">
+                        <span className="font-bold text-slate-700 flex items-center space-x-1">
+                          <span>🏛️ 需亲自出庭：</span>
+                        </span>
+                        <span className="text-emerald-700 font-bold">
+                          {input.category === 'marriage' ? '1 次 (家事案核实感情)' : '0 次 (律师全权代办无需到庭)'}
+                        </span>
                       </div>
                     </div>
 
