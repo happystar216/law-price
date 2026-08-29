@@ -83,7 +83,7 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
     (input.regionId && input.clientResidenceRegionId && input.regionId !== input.clientResidenceRegionId)
   );
   let traditionalTravelCostMin = 0;
-  traditionalTravelCostMax = 0;
+  let traditionalTravelCostMax = 0;
 
   if (isCrossRegion) {
     // 若找本地律师去异地出庭办案：包含2~3次往返高铁/机票、酒店住宿及异地办案出差补贴

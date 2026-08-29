@@ -16,7 +16,6 @@ import {
   Home,
   Navigation,
   Scale,
-  Zap,
   TrendingDown,
 } from 'lucide-react';
 
