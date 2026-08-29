@@ -78,9 +78,12 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
   // ==========================================
   // 3. 异地差旅费精算（核心商业壁垒与省钱机会点）
   // ==========================================
-  const isCrossRegion = Boolean(input.isOpponentCity);
+  const isCrossRegion = Boolean(
+    input.isOpponentCity ||
+    (input.regionId && input.clientResidenceRegionId && input.regionId !== input.clientResidenceRegionId)
+  );
   let traditionalTravelCostMin = 0;
-  let traditionalTravelCostMax = 0;
+  traditionalTravelCostMax = 0;
 
   if (isCrossRegion) {
     // 若找本地律师去异地出庭办案：包含2~3次往返高铁/机票、酒店住宿及异地办案出差补贴
@@ -121,15 +124,16 @@ export function runFullCaseAnalysis(input: CaseInputState): FullCaseAnalysis {
   let finalNetCostMax = 0;
 
   if (canTransferLawyerFee) {
-    finalNetCostMin = preservationInsuranceFee;
-    finalNetCostMax = preservationInsuranceFee + Math.round(lawyerFeeRes.min * 0.05);
+    // 依法/约定由败诉方全额报销，当事人最终净支出为 0 元
+    finalNetCostMin = 0;
+    finalNetCostMax = 0;
   } else {
     if (input.feeMode === 'risk') {
-      finalNetCostMin = lawyerFeeRes.riskEst + preservationInsuranceFee;
-      finalNetCostMax = lawyerFeeRes.riskEst * 1.2 + preservationInsuranceFee;
+      finalNetCostMin = lawyerFeeRes.riskEst;
+      finalNetCostMax = Math.round(lawyerFeeRes.riskEst * 1.2);
     } else {
-      finalNetCostMin = lawyerFeeRes.min + preservationInsuranceFee;
-      finalNetCostMax = lawyerFeeRes.max + preservationInsuranceFee;
+      finalNetCostMin = lawyerFeeRes.min;
+      finalNetCostMax = lawyerFeeRes.max;
     }
   }
 

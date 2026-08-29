@@ -52,7 +52,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ analysis, onClose }) =
                 诉讼全景决策与维权成本评估报告
               </h1>
               <p className="text-xs text-slate-500 mt-1">
-                生成时间：{analysis.generatedAt} | 测算依据：全国律协指导规范与《诉讼费用交纳办法》
+                生成时间：{analysis.generatedAt} | 测算依据：全国司法实践大数据与《诉讼费用交纳办法》
               </p>
             </div>
             <div className="text-right">
@@ -123,7 +123,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ analysis, onClose }) =
                       '委托人自行承担'
                     )}
                   </td>
-                  <td className="p-2.5 border border-slate-200 text-slate-500">各省律协指导标准与市场调节</td>
+                  <td className="p-2.5 border border-slate-200 text-slate-500">起诉地司法实践与市场指导参考</td>
                 </tr>
                 <tr>
                   <td className="p-2.5 border border-slate-200 font-medium">财产保全与保函</td>

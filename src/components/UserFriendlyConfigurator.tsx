@@ -639,7 +639,8 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
     claimAmt,
     input.isPropertyCase,
     input.stage,
-    input.feeMode
+    input.feeMode,
+    input.lawyerTier || 'senior'
   ).median;
 
   const rawVenues: {
@@ -717,7 +718,8 @@ export const UserFriendlyConfigurator: React.FC<UserFriendlyConfiguratorProps> =
         claimAmt,
         input.isPropertyCase,
         input.stage,
-        input.feeMode
+        input.feeMode,
+        input.lawyerTier || 'senior'
       );
       const feeDiff = feeRes.median - baseLawyerFee;
 

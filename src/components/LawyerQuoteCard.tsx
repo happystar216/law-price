@@ -39,7 +39,7 @@ export const LawyerQuoteCard: React.FC<LawyerQuoteCardProps> = ({ analysis }) =>
 --------------------------------
 承办律师：${lawyerName}
 咨询热线：${lawyerContact}
-测算依据：全国律协及《诉讼费用交纳办法》法定收费标准`;
+测算依据：全国司法实践与《诉讼费用交纳办法》法定收费标准`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(quoteText);
